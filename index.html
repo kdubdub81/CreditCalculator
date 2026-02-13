@@ -1072,7 +1072,7 @@ function loadFromConfigJSON(cfg){
     }
     if(cfg.scheduledFlightTimes)SCHED_FT=cfg.scheduledFlightTimes;
     if(cfg.rosterPeriods)ROSTER_PERIODS=cfg.rosterPeriods;
-    populateRPDropdown();loadSettingsFromEngine();
+    populateRPDropdown();
 }
 
 function exportConfigJSON(){
@@ -1163,7 +1163,7 @@ ghLoadCredentials();
 (async function autoLoadConfig(){
     // 1. Try loading config.json from same directory (works on GitHub Pages / any web server)
     try{
-        var res=await fetch('config.json',{cache:'no-cache'});
+        var res=await fetch('config.json?_t='+Date.now(),{cache:'no-store'});
         if(res.ok){
             var cfg=await res.json();
             loadFromConfigJSON(cfg);
