@@ -1,0 +1,626 @@
+{
+  "_meta": {
+    "version": 1,
+    "updated": "2026-02-13T12:37:06.521Z",
+    "description": "Roster Credit Calculator config"
+  },
+  "creditValues": {
+    "VLEARN_CREDIT": 0.75,
+    "LEAVE_CREDIT": 2.46,
+    "SBY_CREDIT": 4,
+    "GROUND_CREDIT": 4.5,
+    "DRAFT_MINIMUM": 5,
+    "TVL_MINIMUM": 2
+  },
+  "stdHours": {
+    "FT": 80,
+    "PT75": 60,
+    "PT50": 40
+  },
+  "dutyCodes": {
+    "GROUND_DUTIES": [
+      "ADHOC",
+      "ADMN",
+      "CAPS",
+      "CAT",
+      "CMDGS",
+      "CPC1",
+      "CPC2",
+      "CPC3",
+      "CPC4",
+      "CPC5",
+      "CPC6",
+      "CPC7",
+      "CPT1",
+      "CPT2",
+      "CPT3",
+      "CPT4",
+      "CPT5",
+      "CPT6",
+      "CPT7",
+      "CRM",
+      "CSIM1",
+      "CSIM2",
+      "CSIM3",
+      "CSIM4",
+      "CSIM5",
+      "CSIM6",
+      "CSIM7",
+      "CSIM8",
+      "CSIM9",
+      "DSTW",
+      "EPT",
+      "FRMSC",
+      "FRMSG",
+      "FRMSP",
+      "GPT7",
+      "GRDSCH",
+      "INTS",
+      "LVOP",
+      "LVTO",
+      "MDTR",
+      "NTS",
+      "NTSADH",
+      "NTSADM",
+      "NTSSEP",
+      "OCCDR2",
+      "PCMDGS",
+      "RTP2-24_A",
+      "RTP2-24_B",
+      "RTP3-25_A",
+      "RTP3-25_B",
+      "RTP4-25_A",
+      "RTP4-25_B",
+      "SECDG",
+      "SECTRNG",
+      "SEMNR",
+      "SEP",
+      "SIM",
+      "SIM1",
+      "SIM2",
+      "SIM3",
+      "SIM3A",
+      "SIM3B",
+      "SIMIGS",
+      "SIMSUP",
+      "TRNGSIM",
+      "TTT",
+      "UPRT",
+      "VSEC",
+      "VSEP",
+      "VSIM",
+      "VSIMI",
+      "VSIMP",
+      "ZQDST1",
+      "ZQDST2",
+      "ZQDST3",
+      "ZQSR"
+    ],
+    "LEAVE_DUTIES": [
+      "ALV",
+      "ALVA",
+      "ALVC",
+      "LSL",
+      "C/L",
+      "SICK"
+    ],
+    "ZERO_DUTIES": [
+      "ADO",
+      "BLANK",
+      "DDO",
+      "PDO",
+      "RDO",
+      "SOCDD",
+      "SOCT"
+    ]
+  },
+  "salaryTables": {
+    "SALARY_FT": {
+      "CPT": [
+        281750,
+        290202.5,
+        298908.58
+      ],
+      "FO": [
+        183137.5,
+        188631.63,
+        194290.57
+      ],
+      "CHKCPT": [
+        326830,
+        336634.9,
+        346733.95
+      ],
+      "SNTCPT": [
+        318377.5,
+        327928.83,
+        337766.69
+      ],
+      "TNCPT": [
+        309925,
+        319222.75,
+        328799.43
+      ],
+      "TNFO": [
+        211312.5,
+        217651.88,
+        224181.43
+      ]
+    },
+    "SALARY_PT50": {
+      "CPT": [
+        146342.56,
+        150732.84,
+        155254.82
+      ],
+      "FO": [
+        95122.66,
+        97976.34,
+        100915.63
+      ],
+      "CHKCPT": [
+        169757.37,
+        174850.09,
+        180095.59
+      ],
+      "SNTCPT": [
+        165367.09,
+        170328.11,
+        175437.95
+      ],
+      "TNCPT": [
+        160976.82,
+        165806.12,
+        170780.3
+      ],
+      "TNFO": [
+        109756.92,
+        113049.63,
+        116441.12
+      ]
+    },
+    "SALARY_PT75": {
+      "CPT": [
+        214046.28,
+        220467.67,
+        227081.7
+      ],
+      "FO": [
+        139130.08,
+        143303.98,
+        147603.1
+      ],
+      "CHKCPT": [
+        248293.68,
+        255742.5,
+        263414.77
+      ],
+      "SNTCPT": [
+        241872.3,
+        249128.47,
+        256602.32
+      ],
+      "TNCPT": [
+        235450.91,
+        242514.44,
+        249789.87
+      ],
+      "TNFO": [
+        160534.71,
+        165350.75,
+        170311.27
+      ]
+    },
+    "PROD_RATES": {
+      "CPT": [
+        364.5,
+        375.44,
+        386.7
+      ],
+      "FO": [
+        236.93,
+        244.04,
+        251.36
+      ],
+      "CHKCPT": [
+        422.82,
+        435.51,
+        448.57
+      ],
+      "SNTCPT": [
+        411.89,
+        424.25,
+        436.97
+      ],
+      "TNCPT": [
+        400.95,
+        412.98,
+        425.37
+      ],
+      "TNFO": [
+        273.38,
+        281.58,
+        290.03
+      ]
+    }
+  },
+  "scheduledFlightTimes": {
+    "ADL ASP": "2:05",
+    "ADL BNE": "2:30",
+    "ADL CBR": "1:35",
+    "ADL CNS": "3:10",
+    "ADL DRW": "4:00",
+    "ADL MEL": "1:20",
+    "ADL OOL": "2:20",
+    "ADL PER": "3:20",
+    "ADL SYD": "1:55",
+    "APW BNE": "5:45",
+    "ASP ADL": "2:05",
+    "AYQ BNE": "3:15",
+    "AYQ MEL": "2:50",
+    "AYQ SYD": "2:24",
+    "BME PER": "2:35",
+    "BNE ADL": "2:45",
+    "BNE APW": "4:45",
+    "BNE AYQ": "3:45",
+    "BNE CBR": "1:50",
+    "BNE CNS": "2:25",
+    "BNE DPS": "6:15",
+    "BNE DRW": "4:10",
+    "BNE HBA": "2:50",
+    "BNE HTI": "1:50",
+    "BNE LST": "2:40",
+    "BNE MCY": "0:45",
+    "BNE MEL": "2:20",
+    "BNE MKY": "1:35",
+    "BNE NAN": "3:40",
+    "BNE PER": "5:25",
+    "BNE PPP": "1:40",
+    "BNE ROK": "1:20",
+    "BNE SYD": "1:35",
+    "BNE TSV": "2:10",
+    "BNE ZQN": "3:30",
+    "BNK SYD": "1:20",
+    "CBR ADL": "1:45",
+    "CBR BNE": "1:40",
+    "CBR MEL": "1:15",
+    "CBR OOL": "1:35",
+    "CBR SYD": "1:00",
+    "CHC SYD": "3:25",
+    "CHC ZQN": "0:55",
+    "CNS ADL": "3:15",
+    "CNS BNE": "2:20",
+    "CNS MEL": "3:25",
+    "CNS SYD": "3:00",
+    "DPS BNE": "5:55",
+    "DPS MEL": "5:40",
+    "DPS SYD": "6:10",
+    "DRW ADL": "3:50",
+    "DRW BNE": "3:50",
+    "DRW MEL": "4:20",
+    "DRW PER": "3:50",
+    "DRW SYD": "4:30",
+    "HBA BNE": "2:40",
+    "HBA MEL": "1:20",
+    "HBA SYD": "1:50",
+    "HTI BNE": "1:35",
+    "HTI SYD": "2:20",
+    "KGI PER": "1:10",
+    "KNX PER": "3:35",
+    "KTA PER": "2:05",
+    "LST BNE": "2:30",
+    "LST MEL": "1:05",
+    "LST PER": "4:40",
+    "LST SYD": "1:35",
+    "MCY BNE": "0:01",
+    "MCY MEL": "2:35",
+    "MCY SYD": "1:35",
+    "MEL ADL": "1:20",
+    "MEL AYQ": "3:20",
+    "MEL BNE": "2:10",
+    "MEL CBR": "1:05",
+    "MEL CNS": "3:25",
+    "MEL DPS": "6:10",
+    "MEL DRW": "4:40",
+    "MEL HBA": "1:15",
+    "MEL LST": "1:05",
+    "MEL MCY": "2:20",
+    "MEL NAN": "5:00",
+    "MEL NTL": "1:35",
+    "MEL OOL": "2:10",
+    "MEL PER": "4:25",
+    "MEL SYD": "1:25",
+    "MEL TSV": "3:05",
+    "MEL ZQN": "3:10",
+    "MKY BNE": "1:30",
+    "NAN BNE": "4:05",
+    "NAN MEL": "5:35",
+    "NAN SYD": "4:45",
+    "NTL MEL": "1:40",
+    "OCM PER": "1:50",
+    "OOD PER": "1:55",
+    "OOL ADL": "2:40",
+    "OOL CBR": "1:40",
+    "OOL DPS": "6:25",
+    "OOL MEL": "2:20",
+    "OOL SYD": "1:30",
+    "PER ADL": "2:50",
+    "PER BME": "2:40",
+    "PER BNE": "4:30",
+    "PER DRW": "3:40",
+    "PER KGI": "1:05",
+    "PER KNX": "3:10",
+    "PER KTA": "2:00",
+    "PER LST": "4:05",
+    "PER MEL": "3:35",
+    "PER OCM": "1:50",
+    "PER OOD": "1:55",
+    "PER PHE": "2:10",
+    "PER SYD": "4:15",
+    "PER ZNE": "1:45",
+    "PHE PER": "2:05",
+    "PPP BNE": "1:35",
+    "ROK BNE": "1:10",
+    "SYD ADL": "2:10",
+    "SYD AYQ": "2:24",
+    "SYD BNE": "1:30",
+    "SYD BNK": "1:15",
+    "SYD CBR": "1:00",
+    "SYD CNS": "3:05",
+    "SYD DPS": "6:30",
+    "SYD DRW": "4:30",
+    "SYD HBA": "1:55",
+    "SYD HTI": "2:30",
+    "SYD LST": "1:50",
+    "SYD MCY": "1:35",
+    "SYD MEL": "1:35",
+    "SYD NAN": "4:15",
+    "SYD OOL": "1:20",
+    "SYD PER": "5:05",
+    "SYD TSV": "2:45",
+    "SYD ZQN": "3:00",
+    "TSV BNE": "1:55",
+    "TSV MEL": "3:05",
+    "TSV SYD": "2:40",
+    "ZNE PER": "1:45",
+    "ZQN BNE": "3:45",
+    "ZQN MEL": "3:35",
+    "ZQN SYD": "3:20"
+  },
+  "rosterPeriods": [
+    {
+      "rp": "RP1 - 2025",
+      "start": "23-Dec-24",
+      "end": "19-Jan-25",
+      "mcg": 70
+    },
+    {
+      "rp": "RP2 - 2025",
+      "start": "20-Jan-25",
+      "end": "16-Feb-25",
+      "mcg": 65
+    },
+    {
+      "rp": "RP3 - 2025",
+      "start": "17-Feb-25",
+      "end": "16-Mar-25",
+      "mcg": 65
+    },
+    {
+      "rp": "RP4 - 2025",
+      "start": "17-Mar-25",
+      "end": "13-Apr-25",
+      "mcg": 70
+    },
+    {
+      "rp": "RP5 - 2025",
+      "start": "14-Apr-25",
+      "end": "11-May-25",
+      "mcg": 70
+    },
+    {
+      "rp": "RP6 - 2025",
+      "start": "12-May-25",
+      "end": "08-Jun-25",
+      "mcg": 65
+    },
+    {
+      "rp": "RP7 - 2025",
+      "start": "09-Jun-25",
+      "end": "06-Jul-25",
+      "mcg": 70
+    },
+    {
+      "rp": "RP8 - 2025",
+      "start": "07-Jul-25",
+      "end": "03-Aug-25",
+      "mcg": 70
+    },
+    {
+      "rp": "RP9 - 2025",
+      "start": "04-Aug-25",
+      "end": "31-Aug-25",
+      "mcg": 65
+    },
+    {
+      "rp": "RP10 - 2025",
+      "start": "01-Sep-25",
+      "end": "28-Sep-25",
+      "mcg": 70
+    },
+    {
+      "rp": "RP11 - 2025",
+      "start": "29-Sep-25",
+      "end": "26-Oct-25",
+      "mcg": 65
+    },
+    {
+      "rp": "RP12 - 2025",
+      "start": "27-Oct-25",
+      "end": "23-Nov-25",
+      "mcg": 65
+    },
+    {
+      "rp": "RP13 - 2025",
+      "start": "24-Nov-25",
+      "end": "21-Dec-25",
+      "mcg": 70
+    },
+    {
+      "rp": "RP1 - 2026",
+      "start": "22-Dec-25",
+      "end": "18-Jan-26",
+      "mcg": 70
+    },
+    {
+      "rp": "RP2 - 2026",
+      "start": "19-Jan-26",
+      "end": "15-Feb-26",
+      "mcg": 65
+    },
+    {
+      "rp": "RP3 - 2026",
+      "start": "16-Feb-26",
+      "end": "15-Mar-26",
+      "mcg": 65
+    },
+    {
+      "rp": "RP4 - 2026",
+      "start": "16-Mar-26",
+      "end": "12-Apr-26",
+      "mcg": 70
+    },
+    {
+      "rp": "RP5 - 2026",
+      "start": "13-Apr-26",
+      "end": "10-May-26",
+      "mcg": 65
+    },
+    {
+      "rp": "RP6 - 2026",
+      "start": "11-May-26",
+      "end": "07-Jun-26",
+      "mcg": 65
+    },
+    {
+      "rp": "RP7 - 2026",
+      "start": "08-Jun-26",
+      "end": "05-Jul-26",
+      "mcg": 70
+    },
+    {
+      "rp": "RP8 - 2026",
+      "start": "06-Jul-26",
+      "end": "02-Aug-26",
+      "mcg": 70
+    },
+    {
+      "rp": "RP9 - 2026",
+      "start": "03-Aug-26",
+      "end": "30-Aug-26",
+      "mcg": 0
+    },
+    {
+      "rp": "RP10 - 2026",
+      "start": "31-Aug-26",
+      "end": "27-Sep-26",
+      "mcg": 0
+    },
+    {
+      "rp": "RP11 - 2026",
+      "start": "28-Sep-26",
+      "end": "25-Oct-26",
+      "mcg": 0
+    },
+    {
+      "rp": "RP12 - 2026",
+      "start": "26-Oct-26",
+      "end": "22-Nov-26",
+      "mcg": 0
+    },
+    {
+      "rp": "RP13 - 2026",
+      "start": "23-Nov-26",
+      "end": "20-Dec-26",
+      "mcg": 0
+    },
+    {
+      "rp": "RP1 - 2027",
+      "start": "21-Dec-26",
+      "end": "17-Jan-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP2 - 2027",
+      "start": "18-Jan-27",
+      "end": "14-Feb-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP3 - 2027",
+      "start": "15-Feb-27",
+      "end": "14-Mar-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP4 - 2027",
+      "start": "15-Mar-27",
+      "end": "11-Apr-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP5 - 2027",
+      "start": "12-Apr-27",
+      "end": "09-May-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP6 - 2027",
+      "start": "10-May-27",
+      "end": "06-Jun-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP7 - 2027",
+      "start": "07-Jun-27",
+      "end": "04-Jul-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP8 - 2027",
+      "start": "05-Jul-27",
+      "end": "01-Aug-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP9 - 2027",
+      "start": "02-Aug-27",
+      "end": "29-Aug-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP10 - 2027",
+      "start": "30-Aug-27",
+      "end": "26-Sep-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP11 - 2027",
+      "start": "27-Sep-27",
+      "end": "24-Oct-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP12 - 2027",
+      "start": "25-Oct-27",
+      "end": "21-Nov-27",
+      "mcg": 0
+    },
+    {
+      "rp": "RP13 - 2027",
+      "start": "22-Nov-27",
+      "end": "19-Dec-27",
+      "mcg": 0
+    }
+  ]
+}
