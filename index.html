@@ -880,23 +880,37 @@ function parseSabreEmail(text){
     return csvRows.join('\n');
 }
 function parseRosterReport(text){
+    // 0. Sanitize: strip zero-width and invisible Unicode chars, normalize whitespace
+    text=text.replace(/[\u200B\u200C\u200D\uFEFF\u00AD]/g,'');
+    text=text.replace(/\u00A0/g,' '); // non-breaking space -> space
+
     // 1. Determine roster type from header
     var isCompleted=/Actual\s*(Flight|Duty)\s*Times/i.test(text);
     var rosterType=isCompleted?'Completed':'Publish';
 
     // 2. Extract data portion (after column headers, before footer)
+    // Try multiple anchor strategies
+    var data='';
     var headerIdx=text.indexOf('Remarks');
-    if(headerIdx<0)throw new Error('Could not find table header in Roster Report. Make sure you copied the full page.');
-    var data=text.substring(headerIdx+7);
+    if(headerIdx>=0){
+        data=text.substring(headerIdx+7);
+    }else{
+        // Fallback: find first date pattern in entire text
+        var firstDate=text.match(/\d{2}[A-Z]{3}\d{2}(?:MON|TUE|WED|THU|FRI|SAT|SUN)/);
+        if(firstDate) data=text.substring(firstDate.index);
+        else throw new Error('Could not find table header or dates in Roster Report. Make sure you copied the full page.');
+    }
     var footerIdx=data.indexOf('Found ');
     if(footerIdx>=0)data=data.substring(0,footerIdx);
     data=data.replace(/\n/g,' ').trim();
+    // Strip any remaining non-ASCII characters from data portion
+    data=data.replace(/[^\x20-\x7E]/g,'');
 
     // 3. Split into day groups by date+day pattern
     var dayPattern=/(\d{2}[A-Z]{3}\d{2})(MON|TUE|WED|THU|FRI|SAT|SUN)/g;
     var matches=[],m;
     while((m=dayPattern.exec(data))!==null)matches.push({date:m[1],day:m[2],idx:m.index,len:m[0].length});
-    if(matches.length===0)throw new Error('No roster dates found in pasted data.');
+    if(matches.length===0)throw new Error('No roster dates found. First 80 chars of data: ['+data.substring(0,80)+']');
     var dayGroups=[];
     for(var i=0;i<matches.length;i++){
         var start=matches[i].idx+matches[i].len;
