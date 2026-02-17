@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roster Credit Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0c1117;--surface:#161b22;--surface2:#1c2333;--border:#2a3444;--text:#e6edf3;--text2:#8b949e;--accent:#58a6ff;--green:#3fb950;--orange:#d29922;--red:#f85149;--purple:#bc8cff;--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0;-webkit-text-size-adjust:100%}
+.mono{font-family:'JetBrains Mono',monospace}
+.app-header{padding:1rem 1rem 0}
+h1{font-size:1.5rem;font-weight:700;margin-bottom:.25rem;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:var(--text2);font-size:.85rem;margin-bottom:1rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.card-title{font-weight:700;font-size:.9rem;color:var(--accent);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em}
+label{display:block;font-size:.8rem;color:var(--text2);margin-bottom:.35rem;font-weight:500}
+select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.6rem .75rem;font-family:'DM Sans',sans-serif;font-size:.9rem;margin-bottom:.75rem;-webkit-appearance:none}
+select:focus{outline:none;border-color:var(--accent)}
+.file-label{display:flex;align-items:center;gap:.5rem;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;padding:.75rem;margin-bottom:.75rem;cursor:pointer;transition:border-color .2s;font-size:.85rem}
+.file-label:hover{border-color:var(--accent)}.file-label.loaded{border-color:var(--green);border-style:solid}
+.file-label .icon{font-size:1.2rem}.file-label .status{color:var(--text2);margin-left:auto;font-size:.75rem}.file-label.loaded .status{color:var(--green)}
+input[type="file"]{display:none}
+.btn{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;border:none;border-radius:8px;padding:.75rem 1.5rem;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;width:100%;transition:opacity .2s}.btn:hover{opacity:.9}.btn:disabled{opacity:.4;cursor:not-allowed}
+.results{display:none}.results.show{display:block}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border)}.result-row:last-child{border-bottom:none}
+.result-label{font-size:.85rem;color:var(--text2)}.result-value{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem}
+.result-value.positive{color:var(--green)}.result-value.zero{color:var(--text2)}.result-value.highlight{color:var(--orange);font-size:1.3rem}
+.summary-box{background:var(--surface2);border-radius:8px;padding:1rem;margin-top:.75rem}
+.detail-toggle{color:var(--accent);font-size:.8rem;cursor:pointer;text-decoration:underline;margin-top:.5rem;display:inline-block}
+.detail-table{display:none;width:100%;margin-top:.75rem;border-collapse:collapse;font-size:.75rem}.detail-table.show{display:table}
+.detail-table th{text-align:left;color:var(--text2);font-weight:500;padding:.4rem .5rem;border-bottom:1px solid var(--border);white-space:nowrap}
+.detail-table td{padding:.35rem .5rem;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:.7rem;white-space:nowrap}
+.detail-table tr.draft-row{background:rgba(188,140,255,.1)}.detail-table tr.infringement-row{background:rgba(248,81,73,.1)}
+.tag{display:inline-block;font-size:.65rem;padding:.15rem .4rem;border-radius:4px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.tag-fly{background:rgba(88,166,255,.2);color:var(--accent)}.tag-tvl{background:rgba(63,185,80,.2);color:var(--green)}.tag-sby{background:rgba(210,153,34,.2);color:var(--orange)}.tag-gnd{background:rgba(188,140,255,.2);color:var(--purple)}.tag-lve{background:rgba(248,81,73,.2);color:var(--red)}.tag-off{background:rgba(139,148,158,.2);color:var(--text2)}
+.radio-label{display:inline-flex;align-items:center;gap:.35rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.4rem .65rem;font-size:.8rem;cursor:pointer;transition:border-color .2s}.radio-label:hover{border-color:var(--accent)}.radio-label input[type="radio"]{accent-color:var(--accent);margin:0}
+.paste-box{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.65rem .75rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;resize:vertical;min-height:80px;line-height:1.5}
+.paste-box:focus{outline:none;border-color:var(--accent)}
+.paste-box::placeholder{color:var(--text2);opacity:.5;font-family:'DM Sans',sans-serif;font-size:.85rem;font-style:italic}
+.paste-status{font-size:.75rem;color:var(--text2)}.paste-status.ok{color:var(--green)}.paste-status.err{color:var(--red)}
+.pay-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:.5rem}.pay-table th{text-align:left;color:var(--text2);font-weight:500;padding:.5rem;border-bottom:1px solid var(--border)}.pay-table td{padding:.5rem;border-bottom:1px solid var(--border);font-size:.8rem}.pay-table tfoot td{padding:.6rem .5rem;border-bottom:none}
+.error-msg{background:rgba(248,81,73,.1);border:1px solid var(--red);border-radius:8px;padding:.75rem;color:var(--red);font-size:.85rem;margin-bottom:1rem;display:none}.error-msg.show{display:block}
+.divider{height:1px;background:var(--border);margin:1rem 0}
+
+/* Tab Navigation */
+.tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:1rem;padding:0 1rem;gap:0}
+.tab-btn{background:none;border:none;color:var(--text2);font-family:'DM Sans',sans-serif;font-weight:600;font-size:.9rem;padding:.75rem 1.25rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .2s,border-color .2s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none;padding:0 1rem 1rem}
+.tab-content.active{display:block}
+
+/* Settings styles */
+.settings-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.5rem .75rem;font-family:'DM Sans',sans-serif;font-size:.85rem;margin-bottom:.5rem}
+.settings-input:focus{outline:none;border-color:var(--accent)}
+.settings-input.mono{font-family:'JetBrains Mono',monospace;font-size:.8rem}
+.settings-row{display:flex;gap:.75rem;align-items:flex-end;margin-bottom:.5rem;flex-wrap:wrap}
+.settings-row .field{flex:1;min-width:120px}
+.settings-row .field label{margin-bottom:.25rem}
+.btn-sm{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:.4rem .75rem;font-family:'DM Sans',sans-serif;font-size:.8rem;cursor:pointer;transition:border-color .2s,background .2s;white-space:nowrap}
+.btn-sm:hover{border-color:var(--accent);background:var(--surface)}
+.btn-sm.danger{border-color:var(--red);color:var(--red)}.btn-sm.danger:hover{background:rgba(248,81,73,.1)}
+.btn-sm.primary{border-color:var(--accent);color:var(--accent)}.btn-sm.primary:hover{background:rgba(88,166,255,.1)}
+.btn-sm.success{border-color:var(--green);color:var(--green)}.btn-sm.success:hover{background:rgba(63,185,80,.1)}
+.chip-list{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.5rem}
+.chip{display:inline-flex;align-items:center;gap:.3rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.25rem .5rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text)}
+.chip .chip-x{cursor:pointer;color:var(--red);font-weight:700;font-size:.8rem;line-height:1;padding:0 .1rem}.chip .chip-x:hover{opacity:.7}
+.gh-status{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:8px;font-size:.8rem;margin-bottom:.75rem}
+.gh-status.connected{background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.3);color:var(--green)}
+.gh-status.disconnected{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:var(--red)}
+.gh-status .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.gh-status.connected .dot{background:var(--green)}.gh-status.disconnected .dot{background:var(--red)}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem 1.25rem;font-size:.85rem;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast.show{opacity:1}.toast.success{border-color:var(--green);color:var(--green)}.toast.error{border-color:var(--red);color:var(--red)}
+.editable-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:.5rem;margin-bottom:.75rem}
+.editable-table th{text-align:left;color:var(--text2);font-weight:500;padding:.4rem .5rem;border-bottom:1px solid var(--border);font-size:.75rem;white-space:nowrap}
+.editable-table td{padding:.3rem .4rem;border-bottom:1px solid var(--border)}
+.editable-table td input{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:.25rem .4rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;width:100%}
+.editable-table td input:focus{outline:none;border-color:var(--accent)}
+.editable-table .row-delete{color:var(--red);cursor:pointer;font-size:.9rem;text-align:center;opacity:.5}.editable-table .row-delete:hover{opacity:1}
+.accordion{border:1px solid var(--border);border-radius:8px;margin-bottom:.5rem;overflow:hidden}
+.accordion-header{background:var(--surface2);padding:.65rem .85rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.85rem;font-weight:600;transition:background .2s;user-select:none}
+.accordion-header:hover{background:var(--surface)}
+.accordion-header .arrow{transition:transform .2s;color:var(--text2);font-size:.7rem}
+.accordion-header.open .arrow{transform:rotate(180deg)}
+.accordion-body{display:none;padding:.85rem;border-top:1px solid var(--border)}
+.accordion-body.open{display:block}
+.sft-grid{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .5rem;margin-bottom:.5rem;max-height:300px;overflow-y:auto;padding-right:.25rem}
+.sft-item{display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:4px;padding:.2rem .5rem;font-size:.7rem}
+.sft-item .route{color:var(--text2);font-family:'JetBrains Mono',monospace}
+.sft-item .time{color:var(--text);font-family:'JetBrains Mono',monospace;font-weight:600}
+.sft-item .sft-del{color:var(--red);cursor:pointer;margin-left:.3rem;opacity:.5;font-size:.8rem}.sft-item .sft-del:hover{opacity:1}
+
+.duty-classify-row{background:var(--surface2);border-radius:8px;padding:.75rem;margin-bottom:.5rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.duty-classify-row .duty-code{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.9rem;color:var(--text);min-width:90px}
+.duty-classify-row .duty-dates{font-size:.7rem;color:var(--text2);width:100%;margin-bottom:.25rem}
+.duty-classify-row .duty-opts{display:flex;gap:.35rem;flex-wrap:wrap}
+.duty-classify-row .duty-opt{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.3rem .6rem;font-size:.75rem;cursor:pointer;transition:border-color .2s,background .2s;font-family:'DM Sans',sans-serif;color:var(--text2)}
+.duty-classify-row .duty-opt:hover{border-color:var(--accent);color:var(--text)}
+.duty-classify-row .duty-opt.selected{border-color:var(--green);background:rgba(63,185,80,.15);color:var(--green);font-weight:600}
+
+.sft-review-row{background:var(--surface2);border-radius:8px;padding:.6rem .75rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.sft-review-row .sft-r-route{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.85rem;color:var(--text);min-width:80px}
+.sft-review-row .sft-r-times{display:flex;align-items:center;gap:.4rem;font-family:'JetBrains Mono',monospace;font-size:.8rem;flex-wrap:wrap}
+.sft-review-row .sft-r-old{color:var(--red);text-decoration:line-through;opacity:.7}
+.sft-review-row .sft-r-arrow{color:var(--text2);font-size:.7rem}
+.sft-review-row .sft-r-new{color:var(--green);font-weight:600}
+.sft-review-row .sft-r-toggle{margin-left:auto}
+.sft-review-row input[type="checkbox"]{accent-color:var(--green);width:16px;height:16px;cursor:pointer}
+
+@media(min-width:600px){.app-header{padding:2rem 2rem 0}.tab-bar{padding:0 2rem}.tab-content{padding:0 2rem 2rem;max-width:700px}h1{font-size:2rem}}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+<h1>Roster Credit Calculator</h1>
+<p class="subtitle">Virgin Australia &mdash; Overtime, Draft &amp; DDO Infringement</p>
+</div>
+
+<div class="tab-bar">
+<button class="tab-btn active" data-tab="calculator" onclick="switchTab('calculator')">Calculator</button>
+<button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">&#9881; Settings</button>
+</div>
+
+<!-- CALCULATOR TAB -->
+<div class="tab-content active" id="tab-calculator">
+<div id="errorMsg" class="error-msg"></div>
+<div class="card"><div class="card-title">1. Select Roster Period</div><label>Roster Period</label><select id="rpSelect"><option value="">&mdash; Select a roster period &mdash;</option></select><div id="rpInfo" style="font-size:.8rem;color:var(--text2)"></div></div>
+<div class="card">
+<div class="card-title">2. Load Published Roster</div>
+<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">
+<label class="radio-label"><input type="radio" name="pubSource" value="sabre" onchange="togglePubSource()"> Sabre Email</label>
+<label class="radio-label"><input type="radio" name="pubSource" value="rosterreport" onchange="togglePubSource()"> Roster Report</label>
+<label class="radio-label"><input type="radio" name="pubSource" value="csv" onchange="togglePubSource()" checked> Custom CSV File</label>
+</div>
+<div id="pubPasteWrap" style="display:none">
+<textarea id="pubPaste" class="paste-box mono" placeholder="Please paste the Published Roster here." rows="6"></textarea>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.35rem">
+<span class="paste-status" id="pubPasteStatus"></span>
+<button class="btn-sm primary" onclick="processPubPaste()">Process</button>
+</div>
+</div>
+<div id="pubFileWrap">
+<label class="file-label" id="pubLabel"><span class="icon">&#128196;</span><span>Tap to select RosterPublish.csv</span><span class="status" id="pubStatus">Not loaded</span></label>
+<input type="file" id="pubFile" accept=".csv,.txt">
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">3. Load Completed Roster <span style="font-weight:400;text-transform:none;font-size:.75rem;color:var(--text2)">(optional)</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">
+<label class="radio-label"><input type="radio" name="compSource" value="rosterreport" onchange="toggleCompSource()"> Roster Report</label>
+<label class="radio-label"><input type="radio" name="compSource" value="csv" onchange="toggleCompSource()" checked> Custom CSV File</label>
+</div>
+<div id="compPasteWrap" style="display:none">
+<textarea id="compPaste" class="paste-box mono" placeholder="Please paste the Completed Roster here." rows="6"></textarea>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.35rem">
+<span class="paste-status" id="compPasteStatus"></span>
+<button class="btn-sm primary" onclick="processCompPaste()">Process</button>
+</div>
+</div>
+<div id="compFileWrap">
+<label class="file-label" id="compLabel"><span class="icon">&#128196;</span><span>Tap to select RosterComplete.csv</span><span class="status" id="compStatus">Not loaded</span></label>
+<input type="file" id="compFile" accept=".csv,.txt">
+</div>
+</div>
+<button class="btn" id="calcBtn" disabled onclick="runCalculation()">Calculate</button>
+<div class="results" id="results"><div class="divider"></div>
+<div class="card" id="cardRCP"><div class="card-title">Roster Credit Protection (Published)</div><div class="result-row"><span class="result-label">Total Published Credit</span><span class="result-value mono" id="rcpTotal">&mdash;</span></div><div class="result-row"><span class="result-label">+ Vlearn</span><span class="result-value mono">0.75</span></div><div class="result-row"><span class="result-label">Roster Credit Protection Total</span><span class="result-value mono highlight" id="rcpFinal">&mdash;</span></div><div class="result-row"><span class="result-label" id="rcpMcgLabel">Less MCG (&mdash;)</span><span class="result-value mono" id="rcpMinusMCG">&mdash;</span></div><span class="detail-toggle" onclick="toggleDetail('rcpDetail')">Show daily breakdown &#9662;</span><table class="detail-table" id="rcpDetail"><thead><tr><th>Date</th><th>Day</th><th>Type</th><th>Sectors</th><th>Credit</th><th>Rig</th><th>Final</th></tr></thead><tbody id="rcpDetailBody"></tbody></table></div>
+<div class="card" id="cardCRC"><div class="card-title">Completed Roster Credit</div><div class="result-row"><span class="result-label">Normal Days Credit</span><span class="result-value mono" id="crcNormal">&mdash;</span></div><div class="result-row"><span class="result-label">+ Vlearn</span><span class="result-value mono">0.75</span></div><div class="result-row"><span class="result-label">Completed Roster Credit Total</span><span class="result-value mono highlight" id="crcFinal">&mdash;</span></div><div class="result-row"><span class="result-label" id="crcMcgLabel">Less MCG (&mdash;)</span><span class="result-value mono" id="crcMinusMCG">&mdash;</span></div><span class="detail-toggle" onclick="toggleDetail('crcDetail')">Show daily breakdown &#9662;</span><table class="detail-table" id="crcDetail"><thead><tr><th>Date</th><th>Day</th><th>Type</th><th>Sectors</th><th>Credit</th><th>Rig</th><th>Final</th></tr></thead><tbody id="crcDetailBody"></tbody></table></div>
+<div class="card" id="cardDraft"><div class="card-title">Draft</div><div class="result-row"><span class="result-label">Draft Days Credit</span><span class="result-value mono" id="draftTotal">&mdash;</span></div><span class="detail-toggle" onclick="toggleDetail('draftDetail')">Show draft breakdown &#9662;</span><table class="detail-table" id="draftDetail"><thead><tr><th>Date</th><th>Day</th><th>Pub Duty</th><th>Sectors</th><th>Credit</th><th>Rig</th><th>Min 5.0</th><th>Final</th></tr></thead><tbody id="draftDetailBody"></tbody></table></div>
+<div class="card" id="cardDDO"><div class="card-title">DDO Infringement</div><div class="result-row"><span class="result-label">DDO Infringement Credit</span><span class="result-value mono" id="ddoTotal">&mdash;</span></div><span class="detail-toggle" onclick="toggleDetail('ddoDetail')">Show infringement breakdown &#9662;</span><table class="detail-table" id="ddoDetail"><thead><tr><th>DDO Block</th><th>Required</th><th>Actual</th><th>Shortfall</th><th>Credit</th></tr></thead><tbody id="ddoDetailBody"></tbody></table></div>
+<div class="card" id="cardSummary" style="border-color:var(--accent)"><div class="card-title" style="color:var(--green)">Summary &mdash; Payment Due</div><div class="summary-box"><div class="result-row"><span class="result-label" id="sumCRCLabel">Completed Roster Credit &#8722; MCG (Overtime basis)</span><span class="result-value mono" id="sumCRC">&mdash;</span></div><div class="result-row"><span class="result-label" id="sumRCPLabel">Roster Credit Protection &#8722; MCG (Protection basis)</span><span class="result-value mono" id="sumRCP">&mdash;</span></div><div class="result-row" style="border-bottom:none"><span class="result-label" style="font-weight:700;color:var(--text)">Overtime Paid (higher of above)</span><span class="result-value mono highlight" id="sumOT">&mdash;</span></div></div><div class="summary-box" style="margin-top:.5rem"><div class="result-row"><span class="result-label">Draft Total</span><span class="result-value mono positive" id="sumDraft">&mdash;</span></div></div><div class="summary-box" style="margin-top:.5rem"><div class="result-row" style="border-bottom:none"><span class="result-label">DDO Infringement Total</span><span class="result-value mono positive" id="sumDDO">&mdash;</span></div></div></div>
+<div class="card" id="paySection" style="display:none"><div class="card-title" style="color:var(--orange)">Pay Calculation</div><label>Role</label><div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem"><label class="radio-label"><input type="radio" name="role" value="CPT" checked> Captain</label><label class="radio-label"><input type="radio" name="role" value="FO"> First Officer</label><label class="radio-label"><input type="radio" name="role" value="CHKCPT"> Check Captain</label><label class="radio-label"><input type="radio" name="role" value="SNTCPT"> Sr Training Captain</label><label class="radio-label"><input type="radio" name="role" value="TNCPT"> Training Captain</label><label class="radio-label"><input type="radio" name="role" value="TNFO"> Training First Officer</label></div><label>Employment Type</label><div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem"><label class="radio-label"><input type="radio" name="emptype" value="FT" checked> Full Time</label><label class="radio-label"><input type="radio" name="emptype" value="PT75"> Part Time 75</label><label class="radio-label"><input type="radio" name="emptype" value="PT50"> Part Time 50</label></div><table class="pay-table"><thead><tr><th>Description</th><th>Rate</th><th>Hours</th><th>Amount</th></tr></thead><tbody><tr><td>Salary Standard</td><td class="mono" id="paySalRate">&mdash;</td><td class="mono" id="paySalHrs">&mdash;</td><td class="mono" id="paySalAmt">&mdash;</td></tr><tr><td>Extra Flight Hours</td><td class="mono" id="payOTRate">&mdash;</td><td class="mono" id="payOTHrs">&mdash;</td><td class="mono" id="payOTAmt">&mdash;</td></tr><tr><td>FC Worked Day Off Hours</td><td class="mono" id="payDraftRate">&mdash;</td><td class="mono" id="payDraftHrs">&mdash;</td><td class="mono" id="payDraftAmt">&mdash;</td></tr><tr><td>FC Infringement Payment</td><td class="mono" id="payDDORate">&mdash;</td><td class="mono" id="payDDOHrs">&mdash;</td><td class="mono" id="payDDOAmt">&mdash;</td></tr></tbody><tfoot><tr style="border-top:2px solid var(--accent)"><td style="font-weight:700;color:var(--text)">Total</td><td></td><td></td><td class="mono" style="font-weight:700;color:var(--green);font-size:1.1rem" id="payTotal">&mdash;</td></tr></tfoot></table></div>
+<div class="card" id="configChangesBar" style="display:none;border-color:var(--orange)">
+<div style="margin-bottom:.5rem"><span style="color:var(--orange);font-weight:700;font-size:.85rem">Config Changes Detected</span></div>
+<div id="configChangesDuty" style="display:none;margin-bottom:.4rem"><span style="font-size:.75rem;color:var(--accent);font-weight:600">Duty Codes: </span><span style="font-size:.75rem;color:var(--text2)" id="configChangesDutyList"></span></div>
+<div id="configChangesSFT" style="display:none;margin-bottom:.4rem"><span style="font-size:.75rem;color:var(--accent);font-weight:600">Flight Times: </span><span style="font-size:.75rem;color:var(--text2)" id="configChangesSFTList"></span></div>
+<div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
+<button class="btn-sm success" onclick="ghPush()" style="font-weight:600">&#11014; Push to GitHub</button>
+<button class="btn-sm" onclick="exportConfigJSON()">&#128203; Export JSON</button>
+<button class="btn-sm" onclick="document.getElementById('configChangesBar').style.display='none'" style="opacity:.5">Dismiss</button>
+</div>
+</div>
+<div id="sftDisclaimer" style="display:none;padding:.6rem .85rem;background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.25);border-radius:8px;font-size:.75rem;color:var(--orange);line-height:1.5;margin-bottom:1rem">
+<strong>**</strong> One or more flight times were not available in the roster data and were estimated using the scheduled flight time database. Scheduled flight times may change over time due to seasonal or operational factors &mdash; there is a small chance of inaccuracy in these values.
+</div>
+</div>
+</div>
+<div class="tab-content" id="tab-settings">
+
+<div class="card">
+<div class="card-title">Credit Values</div>
+<div class="settings-row">
+<div class="field"><label>Vlearn Credit</label><input type="number" step="0.01" class="settings-input mono" id="cfg_VLEARN_CREDIT"></div>
+<div class="field"><label>Leave Credit</label><input type="number" step="0.01" class="settings-input mono" id="cfg_LEAVE_CREDIT"></div>
+<div class="field"><label>SBY Credit</label><input type="number" step="0.1" class="settings-input mono" id="cfg_SBY_CREDIT"></div>
+</div>
+<div class="settings-row">
+<div class="field"><label>Ground Credit</label><input type="number" step="0.1" class="settings-input mono" id="cfg_GROUND_CREDIT"></div>
+<div class="field"><label>Draft Minimum</label><input type="number" step="0.1" class="settings-input mono" id="cfg_DRAFT_MINIMUM"></div>
+<div class="field"><label>TVL Minimum</label><input type="number" step="0.1" class="settings-input mono" id="cfg_TVL_MINIMUM"></div>
+</div>
+<div class="settings-row">
+<div class="field"><label>STD Hours &ndash; Full Time</label><input type="number" class="settings-input mono" id="cfg_STD_FT"></div>
+<div class="field"><label>STD Hours &ndash; PT75</label><input type="number" class="settings-input mono" id="cfg_STD_PT75"></div>
+<div class="field"><label>STD Hours &ndash; PT50</label><input type="number" class="settings-input mono" id="cfg_STD_PT50"></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Duty Codes</div>
+<div class="accordion"><div class="accordion-header" onclick="toggleAccordion(this)"><span>Ground Duties <span class="count" id="countGround">0</span></span><span class="arrow">&#9660;</span></div><div class="accordion-body"><div class="chip-list" id="chipsGround"></div><div class="settings-row" style="margin-bottom:0"><div class="field"><input type="text" class="settings-input mono" id="addGround" placeholder="Add duty code..."></div><button class="btn-sm primary" onclick="addDutyChip('GROUND')">+ Add</button></div></div></div>
+<div class="accordion"><div class="accordion-header" onclick="toggleAccordion(this)"><span>Leave Duties <span class="count" id="countLeave">0</span></span><span class="arrow">&#9660;</span></div><div class="accordion-body"><div class="chip-list" id="chipsLeave"></div><div class="settings-row" style="margin-bottom:0"><div class="field"><input type="text" class="settings-input mono" id="addLeave" placeholder="Add duty code..."></div><button class="btn-sm primary" onclick="addDutyChip('LEAVE')">+ Add</button></div></div></div>
+<div class="accordion"><div class="accordion-header" onclick="toggleAccordion(this)"><span>Zero Credit Duties <span class="count" id="countZero">0</span></span><span class="arrow">&#9660;</span></div><div class="accordion-body"><div class="chip-list" id="chipsZero"></div><div class="settings-row" style="margin-bottom:0"><div class="field"><input type="text" class="settings-input mono" id="addZero" placeholder="Add duty code..."></div><button class="btn-sm primary" onclick="addDutyChip('ZERO')">+ Add</button></div></div></div>
+</div>
+
+<div class="card">
+<div class="card-title">Salary &amp; Production Rates</div>
+<div class="settings-row" style="margin-bottom:.75rem">
+<div class="field"><label>Year 2 starts</label><input type="date" class="settings-input mono" id="cfg_year2Start"></div>
+<div class="field"><label>Year 3 starts</label><input type="date" class="settings-input mono" id="cfg_year3Start"></div>
+</div>
+<p style="font-size:.7rem;color:var(--text2);margin-bottom:.75rem">Year 1 = before Year 2 start. Year 2 = Year 2 start to day before Year 3. Year 3 = Year 3 start onwards.</p>
+<div class="accordion"><div class="accordion-header" onclick="toggleAccordion(this)"><span>Full Time Salary</span><span class="arrow">&#9660;</span></div><div class="accordion-body"><div id="salaryTableFT"></div></div></div>
+<div class="accordion"><div class="accordion-header" onclick="toggleAccordion(this)"><span>Part Time 75 Salary</span><span class="arrow">&#9660;</span></div><div class="accordion-body"><div id="salaryTablePT75"></div></div></div>
+<div class="accordion"><div class="accordion-header" onclick="toggleAccordion(this)"><span>Part Time 50 Salary</span><span class="arrow">&#9660;</span></div><div class="accordion-body"><div id="salaryTablePT50"></div></div></div>
+<div class="accordion"><div class="accordion-header" onclick="toggleAccordion(this)"><span>Production Rates ($/hr)</span><span class="arrow">&#9660;</span></div><div class="accordion-body"><div id="prodRateTable"></div></div></div>
+</div>
+
+<div class="card">
+<div class="card-title">Scheduled Flight Times</div>
+<p style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem">Used as fallback when flight time not in roster data</p>
+<div class="settings-row">
+<div class="field"><input type="text" class="settings-input mono" id="sftRoute" placeholder="e.g. SYD MEL"></div>
+<div class="field"><input type="text" class="settings-input mono" id="sftTime" placeholder="e.g. 1:35"></div>
+<button class="btn-sm primary" onclick="addSFT()">+ Add</button>
+</div>
+<div style="font-size:.75rem;color:var(--text2);margin-bottom:.5rem"><span id="sftCount">0</span> routes loaded</div>
+<div class="sft-grid" id="sftGrid"></div>
+</div>
+
+<div class="card">
+<div class="card-title">Roster Periods</div>
+<div style="max-height:400px;overflow-y:auto" id="rpTableWrap">
+<table class="editable-table" id="rpTable">
+<thead><tr><th>Period</th><th>Start</th><th>End</th><th>MCG</th><th></th></tr></thead>
+<tbody id="rpTableBody"></tbody>
+</table>
+</div>
+<div style="margin-top:.5rem"><button class="btn-sm primary" onclick="addRosterPeriod()">+ Add Period</button></div>
+</div>
+
+<div class="card" style="border-color:var(--green)">
+<div class="card-title" style="color:var(--green)">Save Changes</div>
+<p style="font-size:.8rem;color:var(--text2);margin-bottom:.75rem">Apply changes to the running calculator, or push to GitHub.</p>
+<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+<button class="btn-sm success" onclick="applySettingsToEngine()" style="font-weight:700;padding:.5rem 1rem">&#10003; Apply to Calculator</button>
+<button class="btn-sm primary" onclick="ghPush()" style="font-weight:700;padding:.5rem 1rem">&#11014; Push to GitHub</button>
+<button class="btn-sm" onclick="exportConfigJSON()">&#128203; Export JSON</button>
+<button class="btn-sm" onclick="importConfigJSON()">&#128194; Import JSON</button>
+<input type="file" id="importJSONFile" accept=".json" style="display:none">
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">GitHub Connection <span style="font-weight:400;text-transform:none;font-size:.75rem;color:var(--text2)">(Admin Use Only)</span></div>
+<div id="ghStatus" class="gh-status disconnected"><span class="dot"></span><span>Not connected</span></div>
+<div class="settings-row">
+<div class="field" style="flex:2"><label>Personal Access Token (fine-grained)</label><input type="password" class="settings-input mono" id="ghToken" placeholder="github_pat_..."></div>
+</div>
+<div class="settings-row">
+<div class="field"><label>Owner / Org</label><input type="text" class="settings-input mono" id="ghOwner" placeholder="username"></div>
+<div class="field"><label>Repository</label><input type="text" class="settings-input mono" id="ghRepo" placeholder="roster-calc"></div>
+</div>
+<div class="settings-row">
+<div class="field"><label>Branch</label><input type="text" class="settings-input mono" id="ghBranch" placeholder="main" value="main"></div>
+<div class="field"><label>Config Path</label><input type="text" class="settings-input mono" id="ghPath" placeholder="config.json" value="config.json"></div>
+</div>
+<div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
+<button class="btn-sm primary" onclick="ghConnect()">&#128279; Connect &amp; Load</button>
+<button class="btn-sm" onclick="ghSaveCredentials()">&#128190; Remember in Browser</button>
+<button class="btn-sm danger" onclick="ghClearCredentials()">&#128465; Clear Saved</button>
+</div>
+</div>
+</div>
+
+<div id="dutyModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);padding:1rem;overflow-y:auto">
+<div style="max-width:500px;margin:2rem auto">
+<div class="card" style="border-color:var(--orange)">
+<div class="card-title" style="color:var(--orange)">Unknown Duty Codes Found</div>
+<p style="font-size:.8rem;color:var(--text2);margin-bottom:1rem">The following duty codes aren't in any category. Classify each one to continue.</p>
+<div id="dutyModalList"></div>
+<div style="display:flex;gap:.5rem;margin-top:1rem">
+<button class="btn" onclick="submitDutyClassifications()" id="dutyModalSubmit">Classify &amp; Calculate</button>
+</div>
+<p style="font-size:.7rem;color:var(--text2);margin-top:.75rem">Codes will be added to the config. Use Settings &gt; Push to GitHub to save permanently.</p>
+</div>
+</div>
+</div>
+
+<div id="sftModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);padding:1rem;overflow-y:auto">
+<div style="max-width:560px;margin:2rem auto">
+<div class="card" style="border-color:var(--accent)">
+<div class="card-title" style="color:var(--accent)">Scheduled Flight Time Review</div>
+<p style="font-size:.8rem;color:var(--text2);margin-bottom:.75rem">The published roster contains routes that are new or have different flight times to the database. Review and accept or keep existing values.</p>
+<div id="sftModalNewSection" style="display:none;margin-bottom:1rem">
+<div style="font-size:.8rem;font-weight:700;color:var(--green);margin-bottom:.5rem">New Routes</div>
+<div id="sftModalNewList"></div>
+</div>
+<div id="sftModalChangedSection" style="display:none">
+<div style="font-size:.8rem;font-weight:700;color:var(--orange);margin-bottom:.5rem">Changed Flight Times</div>
+<div id="sftModalChangedList"></div>
+</div>
+<div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap">
+<button class="btn-sm success" onclick="submitSFTReview(true)" style="font-weight:700;padding:.5rem 1rem">&#10003; Accept All &amp; Calculate</button>
+<button class="btn-sm" onclick="submitSFTReview(false)" style="padding:.5rem 1rem">Skip &amp; Calculate</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Engine config variables
+var VLEARN_CREDIT = 0.75;
+var LEAVE_CREDIT = 2.46;
+var SBY_CREDIT = 4.0;
+var GROUND_CREDIT = 4.5;
+var DRAFT_MINIMUM = 5.0;
+var TVL_MINIMUM = 2.0;
+var STD_HOURS = { FT: 80, PT75: 60, PT50: 40 };
+var PAY_PERIOD_DATES = { year2Start: '2025-07-01', year3Start: '2026-07-01' };
+var GROUND_DUTIES = ["ADHOC","ADMN","CAPS","CAT","CMDGS","CPC1","CPC2","CPC3","CPC4","CPC5","CPC6","CPC7","CPT1","CPT2","CPT3","CPT4","CPT5","CPT6","CPT7","CRM","CSIM1","CSIM2","CSIM3","CSIM4","CSIM5","CSIM6","CSIM7","CSIM8","CSIM9","DSTW","EPT","FRMSC","FRMSG","FRMSP","GPT7","GRDSCH","INTS","LVOP","LVTO","MDTR","NTS","NTSADH","NTSADM","NTSSEP","OCCDR2","PCMDGS","RTP2-24_A","RTP2-24_B","RTP3-25_A","RTP3-25_B","RTP4-25_A","RTP4-25_B","SECDG","SECTRNG","SEMNR","SEP","SIM","SIM1","SIM2","SIM3","SIM3A","SIM3B","SIMIGS","SIMSUP","TRNGSIM","TTT","UPRT","VSEC","VSEP","VSIM","VSIMI","VSIMP","ZQDST1","ZQDST2","ZQDST3","ZQSR"];
+var LEAVE_DUTIES = ["ALV","ALVA","ALVC","LSL","C/L","SICK"];
+var ZERO_DUTIES = ["ADO","BLANK","DDO","PDO","RDO","SOCDD","SOCT"];
+var SALARY_FT={CPT:[281750,290202.50,298908.58],FO:[183137.50,188631.63,194290.57],CHKCPT:[326830,336634.90,346733.95],SNTCPT:[318377.50,327928.83,337766.69],TNCPT:[309925,319222.75,328799.43],TNFO:[211312.50,217651.88,224181.43]};
+var SALARY_PT50={CPT:[146342.56,150732.84,155254.82],FO:[95122.66,97976.34,100915.63],CHKCPT:[169757.37,174850.09,180095.59],SNTCPT:[165367.09,170328.11,175437.95],TNCPT:[160976.82,165806.12,170780.30],TNFO:[109756.92,113049.63,116441.12]};
+var SALARY_PT75={CPT:[214046.28,220467.67,227081.70],FO:[139130.08,143303.98,147603.10],CHKCPT:[248293.68,255742.50,263414.77],SNTCPT:[241872.30,249128.47,256602.32],TNCPT:[235450.91,242514.44,249789.87],TNFO:[160534.71,165350.75,170311.27]};
+var PROD_RATES={CPT:[364.50,375.44,386.70],FO:[236.93,244.04,251.36],CHKCPT:[422.82,435.51,448.57],SNTCPT:[411.89,424.25,436.97],TNCPT:[400.95,412.98,425.37],TNFO:[273.38,281.58,290.03]};
+var SCHED_FT={"ADL ASP":"2:05","ADL BNE":"2:30","ADL CBR":"1:35","ADL CNS":"3:10","ADL DRW":"4:00","ADL MEL":"1:20","ADL OOL":"2:20","ADL PER":"3:20","ADL SYD":"1:55","APW BNE":"5:45","ASP ADL":"2:05","AYQ BNE":"3:15","AYQ MEL":"2:50","AYQ SYD":"2:24","BME PER":"2:35","BNE ADL":"2:45","BNE APW":"4:45","BNE AYQ":"3:45","BNE CBR":"1:50","BNE CNS":"2:25","BNE DPS":"6:15","BNE DRW":"4:10","BNE HBA":"2:50","BNE HTI":"1:50","BNE LST":"2:40","BNE MCY":"0:45","BNE MEL":"2:20","BNE MKY":"1:35","BNE NAN":"3:40","BNE PER":"5:25","BNE PPP":"1:40","BNE ROK":"1:20","BNE SYD":"1:35","BNE TSV":"2:10","BNE ZQN":"3:30","BNK SYD":"1:20","CBR ADL":"1:45","CBR BNE":"1:40","CBR MEL":"1:15","CBR OOL":"1:35","CBR SYD":"1:00","CHC SYD":"3:25","CHC ZQN":"0:55","CNS ADL":"3:15","CNS BNE":"2:20","CNS MEL":"3:25","CNS SYD":"3:00","DPS BNE":"5:55","DPS MEL":"5:40","DPS SYD":"6:10","DRW ADL":"3:50","DRW BNE":"3:50","DRW MEL":"4:20","DRW PER":"3:50","DRW SYD":"4:30","HBA BNE":"2:40","HBA MEL":"1:20","HBA SYD":"1:50","HTI BNE":"1:35","HTI SYD":"2:20","KGI PER":"1:10","KNX PER":"3:35","KTA PER":"2:05","LST BNE":"2:30","LST MEL":"1:05","LST PER":"4:40","LST SYD":"1:35","MCY BNE":"0:01","MCY MEL":"2:35","MCY SYD":"1:35","MEL ADL":"1:20","MEL AYQ":"3:20","MEL BNE":"2:10","MEL CBR":"1:05","MEL CNS":"3:25","MEL DPS":"6:10","MEL DRW":"4:40","MEL HBA":"1:15","MEL LST":"1:05","MEL MCY":"2:20","MEL NAN":"5:00","MEL NTL":"1:35","MEL OOL":"2:10","MEL PER":"4:25","MEL SYD":"1:25","MEL TSV":"3:05","MEL ZQN":"3:10","MKY BNE":"1:30","NAN BNE":"4:05","NAN MEL":"5:35","NAN SYD":"4:45","NTL MEL":"1:40","OCM PER":"1:50","OOD PER":"1:55","OOL ADL":"2:40","OOL CBR":"1:40","OOL DPS":"6:25","OOL MEL":"2:20","OOL SYD":"1:30","PER ADL":"2:50","PER BME":"2:40","PER BNE":"4:30","PER DRW":"3:40","PER KGI":"1:05","PER KNX":"3:10","PER KTA":"2:00","PER LST":"4:05","PER MEL":"3:35","PER OCM":"1:50","PER OOD":"1:55","PER PHE":"2:10","PER SYD":"4:15","PER ZNE":"1:45","PHE PER":"2:05","PPP BNE":"1:35","ROK BNE":"1:10","SYD ADL":"2:10","SYD AYQ":"2:24","SYD BNE":"1:30","SYD BNK":"1:15","SYD CBR":"1:00","SYD CNS":"3:05","SYD DPS":"6:30","SYD DRW":"4:30","SYD HBA":"1:55","SYD HTI":"2:30","SYD LST":"1:50","SYD MCY":"1:35","SYD MEL":"1:35","SYD NAN":"4:15","SYD OOL":"1:20","SYD PER":"5:05","SYD TSV":"2:45","SYD ZQN":"3:00","TSV BNE":"1:55","TSV MEL":"3:05","TSV SYD":"2:40","ZNE PER":"1:45","ZQN BNE":"3:45","ZQN MEL":"3:35","ZQN SYD":"3:20"};
+var ROSTER_PERIODS=[{rp:"RP1 - 2025",start:"23-Dec-24",end:"19-Jan-25",mcg:70},{rp:"RP2 - 2025",start:"20-Jan-25",end:"16-Feb-25",mcg:65},{rp:"RP3 - 2025",start:"17-Feb-25",end:"16-Mar-25",mcg:65},{rp:"RP4 - 2025",start:"17-Mar-25",end:"13-Apr-25",mcg:70},{rp:"RP5 - 2025",start:"14-Apr-25",end:"11-May-25",mcg:70},{rp:"RP6 - 2025",start:"12-May-25",end:"08-Jun-25",mcg:65},{rp:"RP7 - 2025",start:"09-Jun-25",end:"06-Jul-25",mcg:70},{rp:"RP8 - 2025",start:"07-Jul-25",end:"03-Aug-25",mcg:70},{rp:"RP9 - 2025",start:"04-Aug-25",end:"31-Aug-25",mcg:65},{rp:"RP10 - 2025",start:"01-Sep-25",end:"28-Sep-25",mcg:70},{rp:"RP11 - 2025",start:"29-Sep-25",end:"26-Oct-25",mcg:65},{rp:"RP12 - 2025",start:"27-Oct-25",end:"23-Nov-25",mcg:65},{rp:"RP13 - 2025",start:"24-Nov-25",end:"21-Dec-25",mcg:70},{rp:"RP1 - 2026",start:"22-Dec-25",end:"18-Jan-26",mcg:70},{rp:"RP2 - 2026",start:"19-Jan-26",end:"15-Feb-26",mcg:65},{rp:"RP3 - 2026",start:"16-Feb-26",end:"15-Mar-26",mcg:65},{rp:"RP4 - 2026",start:"16-Mar-26",end:"12-Apr-26",mcg:70},{rp:"RP5 - 2026",start:"13-Apr-26",end:"10-May-26",mcg:65},{rp:"RP6 - 2026",start:"11-May-26",end:"07-Jun-26",mcg:65},{rp:"RP7 - 2026",start:"08-Jun-26",end:"05-Jul-26",mcg:70},{rp:"RP8 - 2026",start:"06-Jul-26",end:"02-Aug-26",mcg:70},{rp:"RP9 - 2026",start:"03-Aug-26",end:"30-Aug-26",mcg:0},{rp:"RP10 - 2026",start:"31-Aug-26",end:"27-Sep-26",mcg:0},{rp:"RP11 - 2026",start:"28-Sep-26",end:"25-Oct-26",mcg:0},{rp:"RP12 - 2026",start:"26-Oct-26",end:"22-Nov-26",mcg:0},{rp:"RP13 - 2026",start:"23-Nov-26",end:"20-Dec-26",mcg:0},{rp:"RP1 - 2027",start:"21-Dec-26",end:"17-Jan-27",mcg:0},{rp:"RP2 - 2027",start:"18-Jan-27",end:"14-Feb-27",mcg:0},{rp:"RP3 - 2027",start:"15-Feb-27",end:"14-Mar-27",mcg:0},{rp:"RP4 - 2027",start:"15-Mar-27",end:"11-Apr-27",mcg:0},{rp:"RP5 - 2027",start:"12-Apr-27",end:"09-May-27",mcg:0},{rp:"RP6 - 2027",start:"10-May-27",end:"06-Jun-27",mcg:0},{rp:"RP7 - 2027",start:"07-Jun-27",end:"04-Jul-27",mcg:0},{rp:"RP8 - 2027",start:"05-Jul-27",end:"01-Aug-27",mcg:0},{rp:"RP9 - 2027",start:"02-Aug-27",end:"29-Aug-27",mcg:0},{rp:"RP10 - 2027",start:"30-Aug-27",end:"26-Sep-27",mcg:0},{rp:"RP11 - 2027",start:"27-Sep-27",end:"24-Oct-27",mcg:0},{rp:"RP12 - 2027",start:"25-Oct-27",end:"21-Nov-27",mcg:0},{rp:"RP13 - 2027",start:"22-Nov-27",end:"19-Dec-27",mcg:0}];
+function cleanDuty(d){return(d||'').trim().replace(/^\$\s*/,'').toUpperCase();}
+function timeToDecimal(t){if(!t||t.trim()===''||t==='0')return 0;var p=t.trim().split(':');if(p.length!==2)return 0;return Math.round((parseInt(p[0],10)+parseInt(p[1],10)/60)*100)/100;}
+function dec2(v){return v.toFixed(2);}
+function r2(v){return Math.round(v*100)/100;}
+function parseRPDate(s){var m={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};var p=s.split('-');return new Date(2000+parseInt(p[2],10),m[p[1]],parseInt(p[0],10));}
+function parseRosterDate(s){if(!s||s.trim()==='')return null;s=s.trim().toUpperCase();var m={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};var d=parseInt(s.substring(0,2),10),mo=s.substring(2,5),y=parseInt(s.substring(5,7),10)+2000;return m[mo]!==undefined?new Date(y,m[mo],d):null;}
+function dateKey(d){return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+function isDutyType(d,l){return l.indexOf(d)!==-1;}
+function isSBY(d){return d.indexOf('SBY')===0;}
+function isFLY(d){return d==='FLY';}
+function isTVL(d){return d==='TVL';}
+// Sector time lookup: roster-based cache checked first, then static DB
+var _sectorCache={};     // {sector: "H:MM"} built from roster data before calc
+var _usedStaticDB=false; // tracks if static SCHED_FT was used as final fallback
+
+function buildSectorCache(pubData,startDate,endDate){
+    _sectorCache={};_usedStaticDB=false;
+    // Find current RP index
+    var curIdx=-1;
+    for(var i=0;i<ROSTER_PERIODS.length;i++){
+        var rs=parseRPDate(ROSTER_PERIODS[i].start),re=parseRPDate(ROSTER_PERIODS[i].end);
+        if(dateKey(rs)===dateKey(startDate)&&dateKey(re)===dateKey(endDate)){curIdx=i;break;}
+    }
+    // Collect from up to 3 prior RPs (oldest first so newer overwrites)
+    if(curIdx>0){
+        var fromIdx=Math.max(0,curIdx-3);
+        for(var p=fromIdx;p<curIdx;p++){
+            var prp=ROSTER_PERIODS[p],ps=parseRPDate(prp.start),pe=parseRPDate(prp.end);
+            var priorRows=filterByDateRange(pubData,ps,pe);
+            for(var j=0;j<priorRows.length;j++){
+                var row=priorRows[j],duty=cleanDuty(row.duty),sec=row.sector.trim(),ft=row.fltTime.trim();
+                if((duty==='FLY'||duty==='TVL')&&sec&&ft&&ft!=='0'){
+                    var dec=timeToDecimal(ft);
+                    if(dec>0)_sectorCache[sec]=ft;
+                }
+            }
+        }
+    }
+    // Current RP overwrites (most recent/relevant)
+    var curRows=filterByDateRange(pubData,startDate,endDate);
+    for(var k=0;k<curRows.length;k++){
+        var row2=curRows[k],duty2=cleanDuty(row2.duty),sec2=row2.sector.trim(),ft2=row2.fltTime.trim();
+        if((duty2==='FLY'||duty2==='TVL')&&sec2&&ft2&&ft2!=='0'){
+            var dec2=timeToDecimal(ft2);
+            if(dec2>0)_sectorCache[sec2]=ft2;
+        }
+    }
+}
+
+function getSchedFT(s){
+    // 1. Check roster-based cache (current RP + up to 3 prior)
+    if(_sectorCache[s])return _sectorCache[s];
+    // 2. Fall back to static database (flag for disclaimer)
+    if(SCHED_FT[s]){_usedStaticDB=true;return SCHED_FT[s];}
+    return null;
+}
+function getPayPeriodIndex(e){var y3=new Date(PAY_PERIOD_DATES.year3Start+'T00:00:00');var y2=new Date(PAY_PERIOD_DATES.year2Start+'T00:00:00');if(e>=y3)return 2;if(e>=y2)return 1;return 0;}
+function timeStrToDecHours(t){if(!t||t.trim()==='')return 0;var h=parseInt(t.substring(0,2),10)||0,m=parseInt(t.substring(2,4),10)||0;return r2(h+m/60);}
+
+// Guess flight time when fltTime is blank but STD and STA exist.
+// Calculates raw STD->STA difference, then adjusts by whole hours to get closest to scheduled.
+function guessFlightTime(std,sta,sector){
+    if(!std||!sta)return null;
+    var schedStr=getSchedFT(sector);if(!schedStr)return null;
+    var schedDec=timeToDecimal(schedStr);
+    var stdDec=timeStrToDecHours(std);
+    var staDec=timeStrToDecHours(sta);
+    var rawDiff=r2(staDec-stdDec);if(rawDiff<0)rawDiff=r2(rawDiff+24); // crosses midnight
+    // Try adjustments from -12 to +12 hours, find closest to scheduled
+    var bestFT=rawDiff,bestDist=Math.abs(rawDiff-schedDec);
+    for(var adj=-12;adj<=12;adj++){
+        if(adj===0)continue;
+        var candidate=r2(rawDiff+adj);
+        if(candidate<=0)continue;
+        var dist=Math.abs(candidate-schedDec);
+        if(dist<bestDist){bestDist=dist;bestFT=candidate;}
+    }
+    return bestFT;
+}
+
+function parseCSV(text){
+    var lines=text.split('\n'),data=[];
+    for(var i=0;i<lines.length;i++){var line=lines[i].trim();if(line===''||line.toUpperCase()==='PUBLISH'||line.toUpperCase()==='COMPLETE'||line.indexOf('Start Date,')===0)continue;var cols=line.split(',');if(cols.length<16)continue;var ds=cols[0].trim();if(!ds||!parseRosterDate(ds))continue;
+    data.push({date:ds,dateObj:parseRosterDate(ds),day:cols[1].trim(),fltNum:cols[2].trim(),sector:cols[3].trim(),ac:cols[4].trim(),duty:cols[5].trim(),pairingDuty:cols[6].trim(),rpt:cols[7].trim(),std:cols[8].trim(),sta:cols[9].trim(),signOff:cols[10].trim(),fltTime:cols[11].trim(),dutyTime:cols[12].trim(),hotel:cols[13].trim(),training:cols[14].trim(),remarks:cols[15].trim()});}
+    return data;
+}
+function filterByDateRange(data,s,e){var sk=dateKey(s),ek=dateKey(e);return data.filter(function(r){var dk=dateKey(r.dateObj);return dk>=sk&&dk<=ek;});}
+function groupByDate(rows){var g={},o=[];for(var i=0;i<rows.length;i++){var dk=dateKey(rows[i].dateObj);if(!g[dk]){g[dk]=[];o.push(dk);}g[dk].push(rows[i]);}return{groups:g,order:o};}
+
+// -- Midnight Crossing Detection --
+function detectMidnightCrossings(grouped){
+    var cx={},order=grouped.order;
+    for(var i=0;i<order.length;i++){
+        var dk=order[i],dayRows=grouped.groups[dk];
+        for(var j=0;j<dayRows.length;j++){
+            var row=dayRows[j],duty=cleanDuty(row.duty);
+            if(!isFLY(duty)&&!isTVL(duty))continue;
+            var std=row.std.trim(),ft=row.fltTime.trim();
+            if(!std||!ft||ft==='0')continue;
+            if(i+1>=order.length)continue;
+            var nextDk=order[i+1],nextRows=grouped.groups[nextDk];
+            for(var k=0;k<nextRows.length;k++){
+                var nr=nextRows[k],nDuty=cleanDuty(nr.duty),nSector=nr.sector.trim(),nFT=nr.fltTime.trim(),nSTD=nr.std.trim();
+                if(nSector===row.sector.trim()&&nDuty===duty&&(!nFT||nFT===''||nFT==='0')&&(!nSTD||nSTD==='')){
+                    var totalFT=timeToDecimal(ft);
+                    var stdDec=timeStrToDecHours(std);
+                    var beforeMN=r2(24-stdDec);
+                    var remainder=r2(totalFT-beforeMN);if(remainder<0)remainder=0;
+                    var rpt=row.rpt.trim(),origDT=timeToDecimal(row.dutyTime);
+                    var depDTP=0;
+                    if(rpt)depDTP=r2(24-timeStrToDecHours(rpt));
+                    var contDTP=r2(origDT-depDTP);if(contDTP<0)contDTP=0;
+                    if(!cx[dk])cx[dk]={};
+                    cx[dk][row.sector.trim()]={type:'departure',totalFT:totalFT,beforeMN:beforeMN,depDutyTime:depDTP,origDutyTime:origDT};
+                    if(!cx[nextDk])cx[nextDk]={};
+                    cx[nextDk][nSector]={type:'continuation',remainder:remainder,contDutyTime:contDTP,beforeMN:beforeMN};
+                    break;
+                }
+            }
+        }
+    }
+    return cx;
+}
+
+// -- Day Credit Calculation --
+function calcDayCredit(dayRows,mode,pubDayRows,mxInfo){
+    var firstRow=dayRows[0],dutyRaw=cleanDuty(firstRow.duty);
+    if(isDutyType(dutyRaw,ZERO_DUTIES))return{credit:0,dutyRig:0,final:0,type:'off',sectors:'',isDraft:false,draftCredit:0,leaveDraftCRC:0,tag:'tag-off',label:dutyRaw};
+    if(isDutyType(dutyRaw,LEAVE_DUTIES))return{credit:LEAVE_CREDIT,dutyRig:0,final:LEAVE_CREDIT,type:'leave',sectors:'',isDraft:false,draftCredit:0,leaveDraftCRC:0,tag:'tag-lve',label:dutyRaw};
+
+    var isDraft=false,pubDutyForDraft='';
+    if(mode==='complete'&&pubDayRows){
+        var pubDuty=cleanDuty(pubDayRows[0].duty);
+        if(isDutyType(pubDuty,ZERO_DUTIES)||isDutyType(pubDuty,LEAVE_DUTIES)){
+            for(var d=0;d<dayRows.length;d++){var cd=cleanDuty(dayRows[d].duty);if(isFLY(cd)||isTVL(cd)||isDutyType(cd,GROUND_DUTIES)||isSBY(cd)){isDraft=true;pubDutyForDraft=pubDuty;break;}}
+        }
+    }
+    if(mode==='complete'&&!isDraft&&isDutyType(dutyRaw,LEAVE_DUTIES))return{credit:LEAVE_CREDIT,dutyRig:0,final:LEAVE_CREDIT,type:'leave',sectors:'',isDraft:false,draftCredit:0,leaveDraftCRC:0,tag:'tag-lve',label:dutyRaw};
+
+    // Duty time calculation with midnight crossing adjustments
+    var dutyTimeDecimal=0;
+    if(firstRow.dutyTime&&firstRow.dutyTime!=='0')dutyTimeDecimal=timeToDecimal(firstRow.dutyTime);
+    var mxDutyAdj=0;
+    if(mxInfo){
+        for(var sec in mxInfo){
+            if(mxInfo[sec].type==='departure'){dutyTimeDecimal=mxInfo[sec].depDutyTime;}
+            else if(mxInfo[sec].type==='continuation'){mxDutyAdj=r2(mxDutyAdj+mxInfo[sec].contDutyTime);}
+        }
+    }
+    if(mxDutyAdj>0){
+        var ownDT=0;
+        for(var di=0;di<dayRows.length;di++){var dSec=dayRows[di].sector.trim();var isCont=mxInfo&&mxInfo[dSec]&&mxInfo[dSec].type==='continuation';if(!isCont&&dayRows[di].dutyTime&&dayRows[di].dutyTime!=='0'){ownDT=timeToDecimal(dayRows[di].dutyTime);break;}}
+        dutyTimeDecimal=r2(mxDutyAdj+ownDT);
+    }
+
+    var dailyTotal=0,hasFly=false,sectorList=[],onlyTVL=true;
+    var guessedSectors=[];
+
+    if(isSBY(dutyRaw)){
+        // Check if pilot was called off standby to fly (other rows have FLY/TVL)
+        var sbyCalledOff=false;
+        for(var sc=1;sc<dayRows.length;sc++){var scd=cleanDuty(dayRows[sc].duty);if(isFLY(scd)||isTVL(scd)){sbyCalledOff=true;break;}}
+        if(!sbyCalledOff){
+            var sbyC=SBY_CREDIT,lvC=0;
+            if(isDraft){var dc=Math.max(sbyC,DRAFT_MINIMUM);if(isDutyType(pubDutyForDraft,LEAVE_DUTIES))lvC=LEAVE_CREDIT;return{credit:sbyC,dutyRig:0,final:sbyC,type:'sby',sectors:'',isDraft:true,draftCredit:dc,leaveDraftCRC:lvC,tag:'tag-sby',label:dutyRaw};}
+            return{credit:sbyC,dutyRig:0,final:sbyC,type:'sby',sectors:'',isDraft:false,draftCredit:0,leaveDraftCRC:0,tag:'tag-sby',label:dutyRaw};
+        }
+        // SBY-turned-flying: calculate SBY portion to subtract from duty time
+        var sbyRow=dayRows[0];
+        var sbyRpt=timeStrToDecHours(sbyRow.rpt.trim());
+        var sbySta=timeStrToDecHours(sbyRow.sta.trim());
+        var sbyPortion=r2(sbySta-sbyRpt);if(sbyPortion<0)sbyPortion=0;
+        // Adjust duty time: subtract SBY portion
+        if(dutyTimeDecimal>0)dutyTimeDecimal=r2(dutyTimeDecimal-sbyPortion);
+    }
+
+    var sbyCalledOffFlag=(isSBY(dutyRaw)&&dayRows.length>1);
+    for(var i=0;i<dayRows.length;i++){
+        var row=dayRows[i],duty=cleanDuty(row.duty),sector=row.sector.trim(),fltTime=row.fltTime.trim();
+        var mxS=mxInfo?mxInfo[sector]:null;
+        if(isSBY(duty)&&sbyCalledOffFlag)continue;
+
+        if(isFLY(duty)){
+            hasFly=true;onlyTVL=false;
+            var ft;
+            if(mxS&&mxS.type==='departure'){
+                ft=mxS.beforeMN; // Departure day: always 2400-STD, no comparison needed
+            }else if(mxS&&mxS.type==='continuation'){
+                ft=mxS.remainder;
+                // Compare actual remainder vs scheduled remainder (schedFT - beforeMN)
+                if(mode==='complete'){
+                    var schedRem=0;
+                    var pubFTmx=0;
+                    if(pubDayRows){for(var pm=0;pm<pubDayRows.length;pm++){if(pubDayRows[pm].sector.trim()===sector&&cleanDuty(pubDayRows[pm].duty)==='FLY'){pubFTmx=timeToDecimal(pubDayRows[pm].fltTime);break;}}}
+                    if(pubFTmx===0){var stm=getSchedFT(sector);if(stm)pubFTmx=timeToDecimal(stm);}
+                    if(pubFTmx>0){schedRem=r2(pubFTmx-mxS.beforeMN);if(schedRem<0)schedRem=0;}
+                    ft=r2(Math.max(ft,schedRem));
+                }
+            }else{
+                ft=timeToDecimal(fltTime);
+                if(ft===0&&row.std.trim()&&row.sta.trim()){var gft=guessFlightTime(row.std.trim(),row.sta.trim(),sector);if(gft!==null){ft=gft;guessedSectors.push(sector);}}
+                if(mode==='complete'){
+                    var pubFT=0;
+                    if(pubDayRows){for(var p=0;p<pubDayRows.length;p++){if(pubDayRows[p].sector.trim()===sector&&cleanDuty(pubDayRows[p].duty)==='FLY'){pubFT=timeToDecimal(pubDayRows[p].fltTime);if(pubFT===0&&pubDayRows[p].std.trim()&&pubDayRows[p].sta.trim()){var gpf=guessFlightTime(pubDayRows[p].std.trim(),pubDayRows[p].sta.trim(),sector);if(gpf!==null){pubFT=gpf;guessedSectors.push(sector+' (pub)');}}break;}}}
+                    if(pubFT===0){var st=getSchedFT(sector);if(st)pubFT=timeToDecimal(st);}
+                    ft=r2(Math.max(ft,pubFT));
+                }
+            }
+            dailyTotal=r2(dailyTotal+ft);sectorList.push(sector+(mxS?'*':''));
+
+        }else if(isTVL(duty)){
+            var tvlFT;
+            var pRole=(row.pairingDuty||'').trim().toUpperCase();
+            var isDIS=(mode==='complete'&&pRole==='DIS');
+            if(mxS&&mxS.type==='departure'){
+                tvlFT=mxS.beforeMN;
+            }else if(mxS&&mxS.type==='continuation'){
+                tvlFT=mxS.remainder;
+                if(mode==='complete'){
+                    var pubTFmx=0;
+                    if(pubDayRows){for(var pm2=0;pm2<pubDayRows.length;pm2++){var pm2duty=cleanDuty(pubDayRows[pm2].duty);if(pubDayRows[pm2].sector.trim()===sector&&(pm2duty==='TVL'||(isDIS&&pm2duty==='FLY'))){pubTFmx=timeToDecimal(pubDayRows[pm2].fltTime);break;}}}
+                    if(pubTFmx===0){var stm2=getSchedFT(sector);if(stm2)pubTFmx=timeToDecimal(stm2);}
+                    if(pubTFmx>0){var schedRemT=r2(pubTFmx-mxS.beforeMN);if(schedRemT<0)schedRemT=0;tvlFT=r2(Math.max(tvlFT,schedRemT));}
+                }
+            }else{
+                tvlFT=timeToDecimal(fltTime);
+                if(tvlFT===0&&row.std.trim()&&row.sta.trim()){var gtvl=guessFlightTime(row.std.trim(),row.sta.trim(),sector);if(gtvl!==null){tvlFT=gtvl;guessedSectors.push(sector);}}
+                if(mode==='complete'){
+                    var pubTF=0;
+                    if(pubDayRows){for(var p2=0;p2<pubDayRows.length;p2++){var p2duty=cleanDuty(pubDayRows[p2].duty);if(pubDayRows[p2].sector.trim()===sector&&(p2duty==='TVL'||(isDIS&&p2duty==='FLY'))){pubTF=timeToDecimal(pubDayRows[p2].fltTime);if(pubTF===0&&pubDayRows[p2].std.trim()&&pubDayRows[p2].sta.trim()){var gptf=guessFlightTime(pubDayRows[p2].std.trim(),pubDayRows[p2].sta.trim(),sector);if(gptf!==null){pubTF=gptf;guessedSectors.push(sector+' (pub)');}}break;}}}
+                    if(pubTF===0){var st2=getSchedFT(sector);if(st2)pubTF=timeToDecimal(st2);}
+                    tvlFT=r2(Math.max(tvlFT,pubTF));
+                }
+            }
+            var tvlCr=isDIS?tvlFT:r2(tvlFT/2);
+            dailyTotal=r2(dailyTotal+tvlCr);sectorList.push(sector+(isDIS?'(DIS)':'(T)')+(mxS?'*':''));
+
+        }else if(isDutyType(duty,GROUND_DUTIES)){onlyTVL=false;dailyTotal=r2(dailyTotal+GROUND_CREDIT);sectorList.push(duty);
+        }else if(isDutyType(duty,LEAVE_DUTIES)){onlyTVL=false;dailyTotal=r2(dailyTotal+LEAVE_CREDIT);
+        }else if(isSBY(duty)){onlyTVL=false;dailyTotal=r2(dailyTotal+SBY_CREDIT);}
+        if(!isTVL(duty))onlyTVL=false;
+    }
+    if(onlyTVL&&dailyTotal<TVL_MINIMUM)dailyTotal=TVL_MINIMUM;
+    var dutyRig=0,finalCredit=dailyTotal;
+    if(hasFly&&dutyTimeDecimal>0){dutyRig=r2(dutyTimeDecimal/2);if(dutyRig>dailyTotal)finalCredit=dutyRig;}
+    // SBY-turned-flying: ensure final credit is at least SBY_CREDIT
+    if(sbyCalledOffFlag&&finalCredit<SBY_CREDIT)finalCredit=SBY_CREDIT;
+    var draftCredit=0,leaveDraftCRC2=0;
+    if(isDraft){draftCredit=Math.max(finalCredit,DRAFT_MINIMUM);if(isDutyType(pubDutyForDraft,LEAVE_DUTIES))leaveDraftCRC2=LEAVE_CREDIT;}
+    var typeLabel=hasFly?'fly':(onlyTVL?'tvl':'gnd'),tagClass=hasFly?'tag-fly':(onlyTVL?'tag-tvl':'tag-gnd');
+    return{credit:dailyTotal,dutyRig:dutyRig,final:finalCredit,type:typeLabel,sectors:sectorList.join(', '),isDraft:isDraft,draftCredit:draftCredit,leaveDraftCRC:leaveDraftCRC2,tag:tagClass,label:isDraft?'DRAFT':dutyRaw,guessed:guessedSectors};
+}
+
+// -- DDO Infringement --
+function calcDDOInfringements(pubG,compG,compData,compDataFull,pubDataFull){
+    var infs=[],processed={};
+    // Build completed duty lookup by dateKey from full data
+    var compDutyMap={};
+    for(var x=0;x<compDataFull.length;x++){var cdk=dateKey(compDataFull[x].dateObj);if(!compDutyMap[cdk])compDutyMap[cdk]=cleanDuty(compDataFull[x].duty);}
+
+    var allD=pubG.order;
+    for(var i=0;i<allD.length;i++){
+        var dk=allD[i];
+        if(processed[dk])continue;
+        var pR=pubG.groups[dk],pD=cleanDuty(pR[0].duty);
+        if(pD!=='DDO')continue;
+        var cR=compG.groups[dk],cD=cR?cleanDuty(cR[0].duty):'';
+        if(cD!=='BLANK')continue;
+
+        // Trigger found: published DDO -> completed BLANK
+        // Find the block of consecutive DDO/BLANK on the COMPLETED roster around this date
+        var triggerDate=new Date(pR[0].dateObj);
+        var blockDates=[dk];
+
+        // Look backwards
+        var checkDate=new Date(triggerDate);
+        while(true){
+            checkDate.setDate(checkDate.getDate()-1);
+            var cdKey=dateKey(checkDate);
+            var cd2=compDutyMap[cdKey];
+            if(cd2==='DDO'||cd2==='BLANK'){blockDates.unshift(cdKey);}else break;
+        }
+        // Look forwards
+        checkDate=new Date(triggerDate);
+        while(true){
+            checkDate.setDate(checkDate.getDate()+1);
+            var cfKey=dateKey(checkDate);
+            var cf2=compDutyMap[cfKey];
+            if(cf2==='DDO'||cf2==='BLANK'){blockDates.push(cfKey);}else break;
+        }
+
+        // Mark all dates in block as processed
+        for(var m=0;m<blockDates.length;m++)processed[blockDates[m]]=true;
+
+        var cnt=blockDates.length;
+        var blockStart=blockDates[0],blockEnd=blockDates[blockDates.length-1];
+        var req=36+(cnt-1)*24;
+
+        // Find last sign-off before the block start
+        var prevSO=null;
+        for(var s=0;s<compDataFull.length;s++){if(dateKey(compDataFull[s].dateObj)<blockStart&&compDataFull[s].signOff&&compDataFull[s].signOff.trim()!=='')prevSO={date:compDataFull[s].dateObj,time:compDataFull[s].signOff.trim(),dateStr:compDataFull[s].date};}
+        // Find first sign-on after the block end
+        var nextSI=null;
+        for(var n=0;n<compDataFull.length;n++){if(dateKey(compDataFull[n].dateObj)>blockEnd&&compDataFull[n].rpt&&compDataFull[n].rpt.trim()!==''){nextSI={date:compDataFull[n].dateObj,time:compDataFull[n].rpt.trim(),dateStr:compDataFull[n].date};break;}}
+
+        if(prevSO&&nextSI){
+            var soH=parseInt(prevSO.time.substring(0,2),10)||0,soM=parseInt(prevSO.time.substring(2,4),10)||0,soDT=new Date(prevSO.date);soDT.setHours(soH,soM,0,0);
+            var siH=parseInt(nextSI.time.substring(0,2),10)||0,siM=parseInt(nextSI.time.substring(2,4),10)||0,siDT=new Date(nextSI.date);siDT.setHours(siH,siM,0,0);
+            var act=(siDT-soDT)/3600000,sh=req-act;
+            if(sh>0){var sm=Math.round(sh*60),cr=0;if(sm>=1&&sm<=60)cr=2;else if(sm>=61&&sm<=120)cr=4;else if(sm>120)cr=5;
+            infs.push({blockDates:prevSO.dateStr+' SO \u2192 '+nextSI.dateStr+' SI ('+cnt+' DDOs)',ddoCount:cnt,requiredHrs:req,actualHrs:Math.round(act*100)/100,shortfallMins:sm,credit:cr});}
+        }
+    }
+    return infs;
+}
+
+// -- UI Setup --
+var pubData=null,compData=null,sel=document.getElementById('rpSelect'),today=new Date(),defaultIdx=-1;
+function populateRPDropdown(){
+    sel.innerHTML='<option value="">\u2014 Select a roster period \u2014</option>';
+    defaultIdx=-1;
+    for(var r=0;r<ROSTER_PERIODS.length;r++){var rp=ROSTER_PERIODS[r],opt=document.createElement('option');opt.value=r;opt.textContent=rp.rp+'  ('+rp.start+' \u2192 '+rp.end+')  MCG: '+rp.mcg;sel.appendChild(opt);var rs=parseRPDate(rp.start),re=parseRPDate(rp.end);if(today>=rs&&today<=re)defaultIdx=r;}
+    if(defaultIdx>=0){sel.value=defaultIdx;var drp=ROSTER_PERIODS[defaultIdx];document.getElementById('rpInfo').textContent=drp.start+' to '+drp.end+' | MCG: '+drp.mcg;}
+}
+populateRPDropdown();
+sel.addEventListener('change',function(){var idx=this.value;if(idx!==''){var rp=ROSTER_PERIODS[idx];document.getElementById('rpInfo').textContent=rp.start+' to '+rp.end+' | MCG: '+rp.mcg;}else document.getElementById('rpInfo').textContent='';checkReady();});
+document.getElementById('pubLabel').addEventListener('click',function(){document.getElementById('pubFile').click();});
+document.getElementById('compLabel').addEventListener('click',function(){document.getElementById('compFile').click();});
+document.getElementById('pubFile').addEventListener('change',function(e){var f=e.target.files[0];if(f){var r=new FileReader();r.onload=function(ev){pubData=parseCSV(ev.target.result);document.getElementById('pubStatus').textContent=pubData.length+' rows';document.getElementById('pubLabel').classList.add('loaded');checkReady();};r.readAsText(f);}});
+document.getElementById('compFile').addEventListener('change',function(e){var f=e.target.files[0];if(f){var r=new FileReader();r.onload=function(ev){compData=parseCSV(ev.target.result);document.getElementById('compStatus').textContent=compData.length+' rows';document.getElementById('compLabel').classList.add('loaded');checkReady();};r.readAsText(f);}});
+
+// -- Source toggle --
+function togglePubSource(){
+    var src=document.querySelector('input[name="pubSource"]:checked').value;
+    document.getElementById('pubFileWrap').style.display=(src==='csv')?'block':'none';
+    document.getElementById('pubPasteWrap').style.display=(src!=='csv')?'block':'none';
+    document.getElementById('pubPaste').value='';
+    document.getElementById('pubPasteStatus').textContent='';
+}
+function toggleCompSource(){
+    var src=document.querySelector('input[name="compSource"]:checked').value;
+    document.getElementById('compFileWrap').style.display=(src==='csv')?'block':'none';
+    document.getElementById('compPasteWrap').style.display=(src!=='csv')?'block':'none';
+    document.getElementById('compPaste').value='';
+    document.getElementById('compPasteStatus').textContent='';
+}
+
+// -- Paste processing --
+// Format parsers: each converts pasted text into standard CSV text
+// These are stubs that will be implemented when formats are defined
+function parsePastedRoster(text,source){
+    if(source==='sabre') return parseSabreEmail(text);
+    if(source==='rosterreport') return parseRosterReport(text);
+    return text; // CSV passthrough
+}
+function parseSabreEmail(text){
+    var lines=text.split('\n');
+    var MONTHS={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+    var MONTH_NAMES=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    var DAY_NAMES=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+    // 1. Parse header
+    var fromDate=null,toDate=null,rank='CPT',base='SYD';
+    for(var h=0;h<Math.min(lines.length,30);h++){
+        var hl=lines[h].trim();
+        var fm=hl.match(/From:\s*(\d{2})([A-Z]{3})(\d{4})\s+To:\s*(\d{2})([A-Z]{3})(\d{4})/);
+        if(fm){fromDate=new Date(parseInt(fm[3]),MONTHS[fm[2]],parseInt(fm[1]));toDate=new Date(parseInt(fm[6]),MONTHS[fm[5]],parseInt(fm[4]));}
+        var rm=hl.match(/Rank:\s*([A-Z]+)/);if(rm)rank=rm[1];
+        var bm=hl.match(/Base:\s*([A-Z]+)/);if(bm)base=bm[1];
+    }
+    if(!fromDate||!toDate)throw new Error('Could not parse date range from Sabre email header');
+
+    // 2. Find detail section
+    var detailStart=-1;
+    for(var i=0;i<lines.length;i++){
+        if(lines[i].match(/^\s*Day\s+Acty\s+C\s+SignIn/)){
+            for(var j=i+1;j<lines.length;j++){if(lines[j].match(/^_{10,}/)){detailStart=j+1;break;}}
+            break;
+        }
+    }
+    if(detailStart<0)throw new Error('Could not find detail section in Sabre email');
+
+    // 3. Date tracking
+    var currentMonth=fromDate.getMonth(),currentYear=fromDate.getFullYear(),lastDayNum=0;
+    function resolveDate(dayNum){
+        if(dayNum<lastDayNum){currentMonth++;if(currentMonth>11){currentMonth=0;currentYear++;}}
+        lastDayNum=dayNum;
+        return new Date(currentYear,currentMonth,dayNum);
+    }
+    function fmtDate(dt){return(dt.getDate()<10?'0':'')+dt.getDate()+MONTH_NAMES[dt.getMonth()]+(dt.getFullYear()%100<10?'0':'')+(dt.getFullYear()%100);}
+    function cleanT(s){return(s||'').replace(/\*/g,'');}
+    function isFlightNum(s){return/^\d{3,4}$/.test(s);}
+    function isTimeStr(s){return/^\d{4}\*?$/.test(s);}
+
+    // Training pairing patterns - flights within these are TVL
+    var TRAIN_ACTY=/^(NTS|RTP|SEP|SIM|CSIM|TTT|EPT)/i;
+    // Known day-off activity codes
+    var DAYOFF_CODES=['DDO','BLANK','PDO','RDO','ADO','ALV','ALVA','ALVC','ALVS','SICK','SICD','LSL','SOCT','SOCDD','TOIL'];
+
+    // 4. Parse detail lines
+    var csvRows=['Publish','Start Date,Day,Flight Number,Sector,A/C,Duty,Pairing Duty,Rpt,STD,STA,Sign Off,Flt Time,Duty Time,Hotel,Training,Remarks'];
+    var currentDayDate=null,currentActy='';
+
+    for(var i=detailStart;i<lines.length;i++){
+        var line=lines[i];
+        if(line.match(/All times displayed are local/))break;
+        if(line.match(/\*{4}\s*END OF REPORT/))break;
+        if(line.match(/^\s*$/))continue;
+        if(line.match(/^\s*[A-Z]{2,5}\s*:\s/))continue;
+        if(line.match(/^\s*Comments:/i))continue;
+        if(line.match(/^_{5,}/))continue;
+        if(line.match(/^\s*Trng\s+StrDt/))break;
+
+        var newDay=line.match(/^(\d{1,2})\s+(\S+)(.*)$/);
+        var cont=line.match(/^\s{2,}(\S+)(.*)$/);
+        if(!newDay&&!cont)continue;
+
+        var acty,afterActy,isNew;
+        if(newDay){
+            var dayNum=parseInt(newDay[1],10);
+            acty=newDay[2];
+            afterActy=line.replace(/^\d{1,2}\s+\S+/,'');
+            isNew=true;
+            currentDayDate=resolveDate(dayNum);
+            currentActy=acty;
+        }else{
+            acty=cont[1];
+            afterActy=line.replace(/^\s+\S+/,'');
+            isNew=false;
+        }
+        if(!currentDayDate)continue;
+
+        // Skip dates outside report range (LO lines from prior period)
+        if(currentDayDate<fromDate||currentDayDate>toDate)continue;
+
+        var dateStr=fmtDate(currentDayDate);
+        var dayName=DAY_NAMES[currentDayDate.getDay()];
+
+        // Parse tokens after activity code
+        var tokens=afterActy.trim().split(/\s+/);
+
+        // Skip LO/RST lines
+        if(tokens.length>0&&(tokens[0]==='LO'||tokens[0]==='RST'))continue;
+
+        // Day-off types (new day only)
+        if(isNew){
+            var isDayOff=false;
+            for(var x=0;x<DAYOFF_CODES.length;x++){if(acty===DAYOFF_CODES[x]){isDayOff=true;break;}}
+            if(isDayOff){
+                csvRows.push(dateStr+','+dayName+',,'+base+',,'+acty+',,,,,,,0,,,');
+                continue;
+            }
+        }
+
+        var idx=0;
+        // Deadhead marker
+        var isDH=false;
+        if(tokens[idx]==='D'){isDH=true;idx++;}
+
+        // Sign-in (new day first leg only)
+        var signIn='';
+        if(isNew&&tokens[idx]&&isTimeStr(tokens[idx])){signIn=cleanT(tokens[idx]);idx++;}
+
+        // Flight/duty code
+        var flightOrDuty=tokens[idx]||'';idx++;
+
+        // Check if ground duty has embedded city (NTSADMSYD -> NTSADM+SYD)
+        // If so, next token is time not city - need to adjust parsing
+        var embeddedCity='';
+        if(!isFlightNum(flightOrDuty)){
+            var sbyM=flightOrDuty.match(/^(SBY[A-Z0-9]{1,2})/i);
+            if(!sbyM){
+                var gcM=flightOrDuty.match(/^(.+?)([A-Z]{3})$/);
+                if(gcM&&gcM[2]!==flightOrDuty&&/^[A-Z]/.test(gcM[1])&&/^(NTS|RTP|SEP|SIM|CSIM|TTT|EPT|CRM|UPRT|ADMN)/i.test(gcM[1])){
+                    embeddedCity=gcM[2];
+                }
+            }
+        }
+
+        // DEP_CITY DEP_TIME ARR_CITY ARR_TIME BLK TURN EQ
+        // If city was embedded in duty code, skip depCity token (it's already known)
+        var depCity,depTime,arrCity,arrTime,blkTime,turnTime,eqType;
+        if(embeddedCity&&tokens[idx]&&isTimeStr(tokens[idx])){
+            depCity=embeddedCity;
+            depTime=tokens[idx]||'';idx++;
+            arrCity=tokens[idx]||'';idx++;
+            arrTime=tokens[idx]||'';idx++;
+            blkTime=tokens[idx]||'';idx++;
+            turnTime=tokens[idx]||'';idx++;
+            eqType=tokens[idx]||'';idx++;
+        }else{
+            depCity=tokens[idx]||'';idx++;
+            depTime=tokens[idx]||'';idx++;
+            arrCity=tokens[idx]||'';idx++;
+            arrTime=tokens[idx]||'';idx++;
+            blkTime=tokens[idx]||'';idx++;
+            turnTime=tokens[idx]||'';idx++;
+            eqType=tokens[idx]||'';idx++;
+        }
+
+        var isTrainPairing=TRAIN_ACTY.test(currentActy);
+
+        if(isFlightNum(flightOrDuty)){
+            var sector=depCity+' '+arrCity;
+            var duty=(isDH||isTrainPairing)?'TVL':'FLY';
+            var pairingDuty=(isDH||isTrainPairing)?'':rank;
+            var prefix=isDH?'DH ':'VA ';
+            var fltNum=prefix+flightOrDuty;
+            var fltTime=(blkTime&&blkTime.match(/^\d{2}:\d{2}$/))?blkTime:'';
+            var ac=(eqType&&eqType.match(/^[A-Z0-9]{2,3}$/))?eqType:'';
+            if(!ac&&turnTime&&turnTime.match(/^[A-Z0-9]{2,3}$/))ac=turnTime;
+            csvRows.push(dateStr+','+dayName+','+fltNum+','+sector+','+ac+','+duty+','+pairingDuty+','+signIn+','+cleanT(depTime)+','+cleanT(arrTime)+',,'+fltTime+',,,,');
+        }else{
+            // Ground duty / standby
+            var gDuty=flightOrDuty,gLoc=depCity||base;
+            if(embeddedCity){
+                // Already parsed: duty code had city stripped
+                var gcMatch2=flightOrDuty.match(/^(.+?)([A-Z]{3})$/);
+                if(gcMatch2)gDuty=gcMatch2[1];
+                gLoc=embeddedCity;
+            }else{
+                var sbyMatch=flightOrDuty.match(/^(SBY[A-Z0-9]{1,2})/i);
+                if(sbyMatch){gDuty=sbyMatch[1];}
+            }
+            var gStd=cleanT(depTime),gSta=cleanT(arrTime);
+            var gDutyTime=(blkTime&&blkTime.match(/^\d{2}:\d{2}$/))?blkTime:'';
+            var gSector=depCity||gLoc||base;
+            var gTraining=(/NTS|SEP|SIM|CSIM|RTP|TTT|EPT|CRM|UPRT|VSEP|VSIM|NTSSEP/i.test(gDuty))?gDuty:'';
+            csvRows.push(dateStr+','+dayName+',,'+gSector+',,'+gDuty+',,'+signIn+','+gStd+','+gSta+',,,'+gDutyTime+',,'+gTraining+',');
+        }
+    }
+
+    if(csvRows.length<=2)throw new Error('No roster data found in Sabre email');
+    return csvRows.join('\n');
+}
+function parseRosterReport(text){
+    // 0. Sanitize: strip zero-width and invisible Unicode chars, normalize whitespace
+    text=text.replace(/[\u200B\u200C\u200D\uFEFF\u00AD]/g,'');
+    text=text.replace(/\u00A0/g,' '); // non-breaking space -> space
+
+    // 1. Determine roster type from header
+    var isCompleted=/Actual\s*(Flight|Duty)\s*Times/i.test(text);
+    var rosterType=isCompleted?'Completed':'Publish';
+
+    // 2. Extract data portion (after column headers, before footer)
+    // Try multiple anchor strategies
+    var data='';
+    var headerIdx=text.indexOf('Remarks');
+    if(headerIdx>=0){
+        data=text.substring(headerIdx+7);
+    }else{
+        // Fallback: find first date pattern in entire text
+        var firstDate=text.match(/\d{2}[A-Z]{3}\d{2}(?:MON|TUE|WED|THU|FRI|SAT|SUN)/);
+        if(firstDate) data=text.substring(firstDate.index);
+        else throw new Error('Could not find table header or dates in Roster Report. Make sure you copied the full page.');
+    }
+    var footerIdx=data.indexOf('Found ');
+    if(footerIdx>=0)data=data.substring(0,footerIdx);
+    data=data.replace(/\n/g,' ').trim();
+    // Strip any remaining non-ASCII characters from data portion
+    data=data.replace(/[^\x20-\x7E]/g,'');
+    // Strip $ markers (completed roster amendment indicators)
+    data=data.replace(/\$\s?/g,'');
+
+    // 3. Split into day groups by date+day pattern
+    var dayPattern=/(\d{2}[A-Z]{3}\d{2})(MON|TUE|WED|THU|FRI|SAT|SUN)/g;
+    var matches=[],m;
+    while((m=dayPattern.exec(data))!==null)matches.push({date:m[1],day:m[2],idx:m.index,len:m[0].length});
+    if(matches.length===0)throw new Error('No roster dates found. First 80 chars of data: ['+data.substring(0,80)+']');
+    var dayGroups=[];
+    for(var i=0;i<matches.length;i++){
+        var start=matches[i].idx+matches[i].len;
+        var end=(i+1<matches.length)?matches[i+1].idx:data.length;
+        dayGroups.push({date:matches[i].date,day:matches[i].day,content:data.substring(start,end)});
+    }
+
+    // 4. Known patterns
+    var AC_RE=/^(73[HWN]|7M8|7HW|32[0-9A-Z]|E[0-9]{2}|AT[0-9]|CS[0-9]|CR[0-9J]|DH[0-9]|ER[0-9J]|SFH|SF3|100)/;
+    var DUTY_NAMES=['FLY','TVL','NTSSEP','NTSADM','NTSADH','NTS','SEP','SIM','CSIM','RTP','TTT','EPT','CRM','UPRT','DDO','BLANK','PDO','RDO','ADO','ALVA','ALVC','ALVS','ALV','SICK','SICD','LSL','SOCT','SOCDD','TOIL','LO'];
+    var DAYOFF=['DDO','BLANK','PDO','RDO','ADO','ALV','ALVA','ALVC','ALVS','SICK','SICD','LSL','SOCT','SOCDD','TOIL'];
+    var TRAINING=['NTS','NTSSEP','NTSADM','NTSADH','SEP','SIM','CSIM','RTP','TTT','EPT','CRM','UPRT','VSEP','VSIM'];
+    var DUTY_SORTED=DUTY_NAMES.slice().sort(function(a,b){return b.length-a.length;});
+
+    function matchDuty(s){
+        for(var i=0;i<DUTY_SORTED.length;i++){if(s.substring(0,DUTY_SORTED[i].length)===DUTY_SORTED[i])return DUTY_SORTED[i];}
+        var sby=s.match(/^(SBY[A-Z0-9]{1,2})/);if(sby)return sby[1];
+        var rtp=s.match(/^(RTP\d[^\s]*)/);if(rtp)return rtp[1];
+        return null;
+    }
+    function isTraining(d){for(var i=0;i<TRAINING.length;i++)if(d===TRAINING[i]||d.indexOf(TRAINING[i])===0)return true;return/^RTP/.test(d);}
+
+    // 5. Parse rows from a day's content
+    function parseRows(content,date,day){
+        var s=content,rows=[];
+        var safety=0;
+        while(s.length>0&&safety<20){
+            safety++;
+            s=s.replace(/^\s+/,'');
+            if(!s)break;
+
+            var flt='',sector='',ac='',duty='',pair='',rpt='',std='',sta='',soff='',fltTime='',dutyTime='',hotel='',training='',remarks='';
+
+            // Flight Number
+            var fltM=s.match(/^(VA|DH) (\d{4})/);
+            var hasFlight=!!fltM;
+            if(fltM){flt=fltM[1]+' '+fltM[2];s=s.substring(fltM[0].length);}
+
+            // Sector
+            if(hasFlight){
+                var sec2=s.match(/^([A-Z]{3}) ([A-Z]{3})/);
+                if(sec2){sector=sec2[1]+' '+sec2[2];s=s.substring(sec2[0].length);}
+            }else{
+                var sec1=s.match(/^([A-Z]{3})/);
+                if(sec1){sector=sec1[1];s=s.substring(3);}
+            }
+
+            // A/C
+            var acM=s.match(AC_RE);
+            if(acM){ac=acM[1];s=s.substring(acM[0].length);}
+            else if(s.charAt(0)==='-'){ac='-';s=s.substring(1);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Duty
+            var dutyCode=matchDuty(s);
+            if(dutyCode){duty=dutyCode;s=s.substring(dutyCode.length);}
+
+            // Pairing Duty
+            var pairM=s.match(/^(CPT|FO|DIS)/);
+            if(pairM){pair=pairM[1];s=s.substring(pairM[0].length);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Time fields: Rpt, STD, STA, Sign Off (each 4 digits or blank space)
+            var tf=[];
+            for(var t=0;t<4;t++){
+                var tm=s.match(/^(\d{4})/);
+                if(tm){tf.push(tm[1]);s=s.substring(4);}
+                else if(s.charAt(0)===' '){tf.push('');s=s.substring(1);}
+                else{tf.push('');break;}
+            }
+            while(tf.length<4)tf.push('');
+            rpt=tf[0];std=tf[1];sta=tf[2];soff=tf[3];
+
+            // Flt Time
+            var ftM=s.match(/^(\d{2}:\d{2})/);
+            if(ftM){fltTime=ftM[1];s=s.substring(5);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Duty Time
+            var dtM=s.match(/^(\d{2}:\d{2})/);
+            if(dtM){dutyTime=dtM[1];s=s.substring(5);}
+            else if(s.match(/^0(?:\s|$)/)){dutyTime='0';s=s.substring(1);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Hotel (blank space)
+            if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Training
+            var trCode=matchDuty(s);
+            if(trCode&&isTraining(trCode)){training=trCode;s=s.substring(trCode.length);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Remarks: consume until next flight or ground-duty continuation row
+            var nextFlt=s.search(/(?:VA|DH) \d{4}/);
+            var nextGnd=s.search(/[A-Z]{3}[-][A-Z]/);
+            var nextEnd=-1;
+            if(nextFlt>=0&&nextGnd>=0)nextEnd=Math.min(nextFlt,nextGnd);
+            else if(nextFlt>=0)nextEnd=nextFlt;
+            else if(nextGnd>=0)nextEnd=nextGnd;
+
+            if(nextEnd>0){remarks=s.substring(0,nextEnd).trim();s=s.substring(nextEnd);}
+            else{remarks=s.trim();s='';}
+
+            // Skip layover rows - not real duties
+            if(duty==='LO')continue;
+
+            rows.push(date+','+day+','+flt+','+sector+','+ac+','+duty+','+pair+','+rpt+','+std+','+sta+','+soff+','+fltTime+','+dutyTime+','+hotel+','+training+','+remarks);
+        }
+        return rows;
+    }
+
+    // 6. Process all days
+    var csvRows=[rosterType,'Start Date,Day,Flight Number,Sector,A/C,Duty,Pairing Duty,Rpt,STD,STA,Sign Off,Flt Time,Duty Time,Hotel,Training,Remarks'];
+    for(var g=0;g<dayGroups.length;g++){
+        var parsed=parseRows(dayGroups[g].content,dayGroups[g].date,dayGroups[g].day);
+        for(var r=0;r<parsed.length;r++)csvRows.push(parsed[r]);
+    }
+
+    if(csvRows.length<=2)throw new Error('No roster data found in pasted Roster Report.');
+    return csvRows.join('\n');
+}
+
+function processPubPaste(){
+    var src=document.querySelector('input[name="pubSource"]:checked').value;
+    var raw=document.getElementById('pubPaste').value.trim();
+    var statusEl=document.getElementById('pubPasteStatus');
+    if(!raw){statusEl.textContent='No data pasted';statusEl.className='paste-status err';return;}
+    try{
+        var csvText=parsePastedRoster(raw,src);
+        pubData=parseCSV(csvText);
+        if(!pubData.length)throw new Error('No valid rows found');
+        statusEl.textContent=pubData.length+' rows loaded';statusEl.className='paste-status ok';
+        checkReady();
+    }catch(err){
+        statusEl.textContent='Error: '+err.message;statusEl.className='paste-status err';
+    }
+}
+function processCompPaste(){
+    var src=document.querySelector('input[name="compSource"]:checked').value;
+    var raw=document.getElementById('compPaste').value.trim();
+    var statusEl=document.getElementById('compPasteStatus');
+    if(!raw){statusEl.textContent='No data pasted';statusEl.className='paste-status err';return;}
+    try{
+        var csvText=parsePastedRoster(raw,src);
+        compData=parseCSV(csvText);
+        if(!compData.length)throw new Error('No valid rows found');
+        statusEl.textContent=compData.length+' rows loaded';statusEl.className='paste-status ok';
+        checkReady();
+    }catch(err){
+        statusEl.textContent='Error: '+err.message;statusEl.className='paste-status err';
+    }
+}
+function checkReady(){document.getElementById('calcBtn').disabled=!(sel.value!==''&&pubData);}
+function toggleDetail(id){document.getElementById(id).classList.toggle('show');}
+function showError(m){var e=document.getElementById('errorMsg');e.textContent=m;e.classList.add('show');}
+function clearError(){document.getElementById('errorMsg').classList.remove('show');}
+
+// -- Unknown Duty Detection --
+var BUILTIN_DUTIES=['FLY','TVL']; // Always recognized by the engine
+function isKnownDuty(code){
+    if(!code||code==='')return true;
+    if(BUILTIN_DUTIES.indexOf(code)!==-1)return true;
+    if(code.indexOf('SBY')===0)return true; // SBY, SBY1, SBY2 etc
+    if(GROUND_DUTIES.indexOf(code)!==-1)return true;
+    if(LEAVE_DUTIES.indexOf(code)!==-1)return true;
+    if(ZERO_DUTIES.indexOf(code)!==-1)return true;
+    return false;
+}
+
+function scanUnknownDuties(pubF,compF){
+    var unknown={};
+    var allRows=pubF.concat(compF);
+    for(var i=0;i<allRows.length;i++){
+        var code=cleanDuty(allRows[i].duty);
+        if(!isKnownDuty(code)){
+            if(!unknown[code])unknown[code]={code:code,dates:[]};
+            var d=allRows[i].date;
+            if(unknown[code].dates.indexOf(d)===-1)unknown[code].dates.push(d);
+        }
+    }
+    return Object.keys(unknown).sort().map(function(k){return unknown[k];});
+}
+
+function showDutyModal(unknowns,callback){
+    var list=document.getElementById('dutyModalList');
+    list.innerHTML='';
+    for(var i=0;i<unknowns.length;i++){
+        var u=unknowns[i];
+        var datePreview=u.dates.slice(0,3).join(', ')+(u.dates.length>3?' +\u2026':'');
+        list.innerHTML+=
+            '<div class="duty-classify-row" data-code="'+u.code+'">'+
+            '<span class="duty-code">'+u.code+'</span>'+
+            '<div class="duty-dates">Appears on: '+datePreview+' ('+u.dates.length+' day'+(u.dates.length>1?'s':'')+')</div>'+
+            '<div class="duty-opts">'+
+            '<span class="duty-opt" data-cat="GROUND" onclick="selectDutyCat(this)">Ground ('+GROUND_CREDIT+'cr)</span>'+
+            '<span class="duty-opt" data-cat="LEAVE" onclick="selectDutyCat(this)">Leave ('+LEAVE_CREDIT+'cr)</span>'+
+            '<span class="duty-opt" data-cat="ZERO" onclick="selectDutyCat(this)">Zero Credit</span>'+
+            '<span class="duty-opt" data-cat="SKIP" onclick="selectDutyCat(this)">Skip</span>'+
+            '</div></div>';
+    }
+    window._dutyModalCallback=callback;
+    document.getElementById('dutyModal').style.display='block';
+}
+
+function selectDutyCat(el){
+    var row=el.closest('.duty-classify-row');
+    row.querySelectorAll('.duty-opt').forEach(function(o){o.classList.remove('selected');});
+    el.classList.add('selected');
+}
+
+function submitDutyClassifications(){
+    var rows=document.querySelectorAll('#dutyModalList .duty-classify-row');
+    var added=[];
+    for(var i=0;i<rows.length;i++){
+        var code=rows[i].getAttribute('data-code');
+        var sel=rows[i].querySelector('.duty-opt.selected');
+        if(!sel){showToast('Classify all codes or mark as Skip','error');return;}
+        var cat=sel.getAttribute('data-cat');
+        if(cat==='GROUND'){GROUND_DUTIES.push(code);GROUND_DUTIES.sort();added.push(code+' \u2192 Ground');}
+        else if(cat==='LEAVE'){LEAVE_DUTIES.push(code);LEAVE_DUTIES.sort();added.push(code+' \u2192 Leave');}
+        else if(cat==='ZERO'){ZERO_DUTIES.push(code);ZERO_DUTIES.sort();added.push(code+' \u2192 Zero');}
+    }
+    document.getElementById('dutyModal').style.display='none';
+    window._newlyClassified=added;
+    if(added.length>0)showToast(added.length+' code'+(added.length>1?'s':'')+' added','success');
+    if(window._dutyModalCallback)window._dutyModalCallback();
+}
+
+function runCalculation(){
+    clearError();document.getElementById('results').classList.remove('show');
+    var rpIdx=sel.value;if(rpIdx===''){showError('Select a roster period.');return;}
+    var rp=ROSTER_PERIODS[rpIdx],startDate=parseRPDate(rp.start),endDate=parseRPDate(rp.end),mcg=rp.mcg;
+    var pubF=filterByDateRange(pubData,startDate,endDate);
+    var compF=compData?filterByDateRange(compData,startDate,endDate):[];
+    if(!pubF.length){showError('No published roster data for this period.');return;}
+
+    var pubOnly=!compF.length;
+
+    // Step 1: Scan for unknown duty codes (pub only if no comp data)
+    var unknowns=scanUnknownDuties(pubF,pubOnly?[]:compF);
+    if(unknowns.length>0){
+        showDutyModal(unknowns,function(){
+            checkSFTThenCalculate(pubF,compF,startDate,endDate,mcg,pubOnly);
+        });
+        return;
+    }
+    // Step 2: Check scheduled flight times (pub roster only)
+    checkSFTThenCalculate(pubF,compF,startDate,endDate,mcg,pubOnly);
+}
+
+// -- Scheduled Flight Time Review --
+function decToTimeStr(dec){
+    var h=Math.floor(dec);var m=Math.round((dec-h)*60);
+    return h+':'+(m<10?'0':'')+m;
+}
+
+function scanSFTChanges(pubF){
+    // Collect all FLY/TVL sectors with valid flight times from published roster
+    var sectorTimes={};
+    for(var i=0;i<pubF.length;i++){
+        var row=pubF[i],duty=cleanDuty(row.duty),sector=row.sector.trim(),ft=row.fltTime.trim();
+        if((duty==='FLY'||duty==='TVL')&&sector&&ft&&ft!=='0'){
+            var dec=timeToDecimal(ft);
+            if(dec>0){
+                if(!sectorTimes[sector])sectorTimes[sector]=[];
+                sectorTimes[sector].push(dec);
+            }
+        }
+    }
+    // For each sector find the mode (most common) flight time
+    var newRoutes=[],changedRoutes=[];
+    for(var sec in sectorTimes){
+        var times=sectorTimes[sec];
+        // Find mode
+        var freq={},bestT=times[0],bestC=0;
+        for(var j=0;j<times.length;j++){var k=times[j].toFixed(2);freq[k]=(freq[k]||0)+1;if(freq[k]>bestC){bestC=freq[k];bestT=times[j];}}
+        var rosterTime=decToTimeStr(bestT);
+        var existing=SCHED_FT[sec];
+        if(!existing){
+            newRoutes.push({sector:sec,rosterTime:rosterTime,rosterDec:bestT,count:times.length});
+        }else{
+            var existingDec=timeToDecimal(existing);
+            if(Math.abs(existingDec-bestT)>=0.02){ // >~1 min difference
+                changedRoutes.push({sector:sec,oldTime:existing,rosterTime:rosterTime,rosterDec:bestT,count:times.length});
+            }
+        }
+    }
+    newRoutes.sort(function(a,b){return a.sector.localeCompare(b.sector);});
+    changedRoutes.sort(function(a,b){return a.sector.localeCompare(b.sector);});
+    return{newRoutes:newRoutes,changedRoutes:changedRoutes};
+}
+
+function checkSFTThenCalculate(pubF,compF,startDate,endDate,mcg,pubOnly){
+    var sftResult=scanSFTChanges(pubF);
+    if(sftResult.newRoutes.length>0||sftResult.changedRoutes.length>0){
+        showSFTModal(sftResult,function(){
+            executeCalculation(pubF,compF,startDate,endDate,mcg,pubOnly);
+        });
+        return;
+    }
+    executeCalculation(pubF,compF,startDate,endDate,mcg,pubOnly);
+}
+
+function showSFTModal(sftResult,callback){
+    window._sftModalCallback=callback;
+    window._sftReviewData=sftResult;
+
+    var newSec=document.getElementById('sftModalNewSection');
+    var newList=document.getElementById('sftModalNewList');
+    var chgSec=document.getElementById('sftModalChangedSection');
+    var chgList=document.getElementById('sftModalChangedList');
+
+    newList.innerHTML='';chgList.innerHTML='';
+
+    if(sftResult.newRoutes.length>0){
+        newSec.style.display='block';
+        for(var i=0;i<sftResult.newRoutes.length;i++){
+            var r=sftResult.newRoutes[i];
+            newList.innerHTML+=
+                '<div class="sft-review-row" data-sector="'+r.sector+'" data-time="'+r.rosterTime+'" data-type="new">'+
+                '<span class="sft-r-route">'+r.sector+'</span>'+
+                '<span class="sft-r-times"><span class="sft-r-new">'+r.rosterTime+'</span>'+
+                '<span style="font-size:.65rem;color:var(--text2);margin-left:.3rem">('+r.count+'x in roster)</span></span>'+
+                '<span class="sft-r-toggle"><input type="checkbox" checked data-sector="'+r.sector+'"></span>'+
+                '</div>';
+        }
+    }else{newSec.style.display='none';}
+
+    if(sftResult.changedRoutes.length>0){
+        chgSec.style.display='block';
+        for(var j=0;j<sftResult.changedRoutes.length;j++){
+            var c=sftResult.changedRoutes[j];
+            chgList.innerHTML+=
+                '<div class="sft-review-row" data-sector="'+c.sector+'" data-time="'+c.rosterTime+'" data-type="changed">'+
+                '<span class="sft-r-route">'+c.sector+'</span>'+
+                '<span class="sft-r-times"><span class="sft-r-old">'+c.oldTime+'</span>'+
+                '<span class="sft-r-arrow">\u2192</span>'+
+                '<span class="sft-r-new">'+c.rosterTime+'</span>'+
+                '<span style="font-size:.65rem;color:var(--text2);margin-left:.3rem">('+c.count+'x in roster)</span></span>'+
+                '<span class="sft-r-toggle"><input type="checkbox" checked data-sector="'+c.sector+'"></span>'+
+                '</div>';
+        }
+    }else{chgSec.style.display='none';}
+
+    document.getElementById('sftModal').style.display='block';
+}
+
+function submitSFTReview(applyChanges){
+    var updated=[];
+    if(applyChanges){
+        var checks=document.querySelectorAll('#sftModal .sft-review-row input[type="checkbox"]');
+        for(var i=0;i<checks.length;i++){
+            if(checks[i].checked){
+                var row=checks[i].closest('.sft-review-row');
+                var sector=row.getAttribute('data-sector');
+                var time=row.getAttribute('data-time');
+                var type=row.getAttribute('data-type');
+                var oldTime=SCHED_FT[sector]||null;
+                SCHED_FT[sector]=time;
+                if(type==='new')updated.push(sector+' '+time+' (new)');
+                else updated.push(sector+' '+oldTime+' \u2192 '+time);
+            }
+        }
+    }
+    document.getElementById('sftModal').style.display='none';
+    window._newlySFTUpdated=updated;
+    if(updated.length>0)showToast(updated.length+' route'+(updated.length>1?'s':'')+' updated','success');
+    if(window._sftModalCallback)window._sftModalCallback();
+}
+
+function executeCalculation(pubF,compF,startDate,endDate,mcg,pubOnly){
+    // Build sector time cache from current + prior RP published data
+    buildSectorCache(pubData,startDate,endDate);
+
+    var pubG=groupByDate(pubF);
+    var pubMX=detectMidnightCrossings(pubG);
+
+    // -- RCP (always calculated) --
+    var rcpR=0,rcpD=[];
+    for(var a=0;a<pubG.order.length;a++){var dk=pubG.order[a],dR=pubG.groups[dk];var res=calcDayCredit(dR,'publish',null,pubMX[dk]||null);rcpR=r2(rcpR+res.final);if(res.final>0)rcpD.push({date:dR[0].date,day:dR[0].day,type:res.label,tag:res.tag,sectors:res.sectors,credit:res.credit,rig:res.dutyRig,final:res.final,guessed:res.guessed||[]});}
+    var rcpTotal=r2(rcpR+VLEARN_CREDIT);
+
+    document.getElementById('rcpTotal').textContent=dec2(rcpR);document.getElementById('rcpFinal').textContent=dec2(rcpTotal);document.getElementById('rcpMcgLabel').textContent='Less MCG ('+mcg+')';document.getElementById('rcpMinusMCG').textContent=dec2(Math.max(0,rcpTotal-mcg));
+    var rcpB=document.getElementById('rcpDetailBody');rcpB.innerHTML='';var rcpFootnotes=[];for(var d=0;d<rcpD.length;d++){var rd=rcpD[d];var gMark=rd.guessed&&rd.guessed.length>0?' *':'';if(rd.guessed&&rd.guessed.length>0)for(var gi=0;gi<rd.guessed.length;gi++)rcpFootnotes.push(rd.date+': Flight time for '+rd.guessed[gi]+' not in roster data. Estimated from STD/STA using scheduled flight time database.');rcpB.innerHTML+='<tr><td>'+rd.date+'</td><td>'+rd.day+'</td><td><span class="tag '+rd.tag+'">'+rd.type+'</span></td><td>'+rd.sectors+'</td><td>'+dec2(rd.credit)+'</td><td>'+(rd.rig>0?dec2(rd.rig):'\u2014')+'</td><td>'+dec2(rd.final)+gMark+'</td></tr>';}if(rcpFootnotes.length>0){rcpB.innerHTML+='<tr><td colspan="7" style="color:var(--orange);font-family:DM Sans,sans-serif;font-style:italic;padding-top:.75rem;white-space:normal">* '+rcpFootnotes.join('<br>* ')+'</td></tr>';}
+
+    // -- Show/hide sections based on mode --
+    var compSections=['cardCRC','cardDraft','cardDDO','cardSummary','paySection'];
+    for(var s=0;s<compSections.length;s++){document.getElementById(compSections[s]).style.display=pubOnly?'none':'block';}
+    document.getElementById('cardRCP').style.display='block';
+
+    if(pubOnly){
+        // Pub-only mode: skip completed roster processing
+        window._calcResults=null;
+
+        // Show config changes bar if applicable
+        var bar=document.getElementById('configChangesBar');
+        var hasDuty=window._newlyClassified&&window._newlyClassified.length>0;
+        var hasSFT=window._newlySFTUpdated&&window._newlySFTUpdated.length>0;
+        if(hasDuty||hasSFT){
+            bar.style.display='block';
+            var dutyDiv=document.getElementById('configChangesDuty');var sftDiv=document.getElementById('configChangesSFT');
+            if(hasDuty){dutyDiv.style.display='block';document.getElementById('configChangesDutyList').textContent=window._newlyClassified.join(', ');}else{dutyDiv.style.display='none';}
+            if(hasSFT){sftDiv.style.display='block';document.getElementById('configChangesSFTList').textContent=window._newlySFTUpdated.join(', ');}else{sftDiv.style.display='none';}
+            window._newlyClassified=null;window._newlySFTUpdated=null;
+        }else{bar.style.display='none';}
+
+        document.getElementById('sftDisclaimer').style.display=_usedStaticDB?'block':'none';
+        document.getElementById('results').classList.add('show');document.getElementById('results').scrollIntoView({behavior:'smooth'});
+        return;
+    }
+
+    // -- Full mode: CRC, Draft, DDO --
+    var compG=groupByDate(compF);
+    var compMX=detectMidnightCrossings(compG);
+
+    var crcR=0,crcD=[],draftR=0,draftD=[];
+    for(var b=0;b<compG.order.length;b++){var dk2=compG.order[b],cRows=compG.groups[dk2],pRows=pubG.groups[dk2]||null;var res2=calcDayCredit(cRows,'complete',pRows,compMX[dk2]||null);
+        if(res2.isDraft){draftR=r2(draftR+res2.draftCredit);if(res2.leaveDraftCRC>0)crcR=r2(crcR+res2.leaveDraftCRC);draftD.push({date:cRows[0].date,day:cRows[0].day,pubDuty:pRows?cleanDuty(pRows[0].duty):'\u2014',sectors:res2.sectors,credit:res2.credit,rig:res2.dutyRig,min5:Math.max(DRAFT_MINIMUM,res2.final),final:res2.draftCredit,guessed:res2.guessed||[]});}
+        else{crcR=r2(crcR+res2.final);if(res2.final>0)crcD.push({date:cRows[0].date,day:cRows[0].day,type:res2.label,tag:res2.tag,sectors:res2.sectors,credit:res2.credit,rig:res2.dutyRig,final:res2.final,guessed:res2.guessed||[]});}}
+    var crcTotal=r2(crcR+VLEARN_CREDIT);
+
+    var infs=calcDDOInfringements(pubG,compG,compF,compData,pubData),ddoT=0;for(var c=0;c<infs.length;c++)ddoT+=infs[c].credit;
+
+    document.getElementById('crcNormal').textContent=dec2(crcR);document.getElementById('crcFinal').textContent=dec2(crcTotal);document.getElementById('crcMcgLabel').textContent='Less MCG ('+mcg+')';document.getElementById('crcMinusMCG').textContent=dec2(Math.max(0,crcTotal-mcg));
+    document.getElementById('draftTotal').textContent=dec2(draftR);document.getElementById('ddoTotal').textContent=dec2(ddoT);
+    var crcMM=Math.max(0,crcTotal-mcg),rcpMM=Math.max(0,rcpTotal-mcg),otP=Math.max(crcMM,rcpMM);
+    document.getElementById('sumCRCLabel').textContent='Completed Roster Credit \u2212 MCG ('+mcg+') (Overtime basis)';document.getElementById('sumRCPLabel').textContent='Roster Credit Protection \u2212 MCG ('+mcg+') (Protection basis)';
+    document.getElementById('sumCRC').textContent=dec2(crcMM);document.getElementById('sumRCP').textContent=dec2(rcpMM);document.getElementById('sumOT').textContent=dec2(otP);document.getElementById('sumOT').className='result-value mono '+(otP>0?'highlight':'zero');
+    document.getElementById('sumDraft').textContent=dec2(draftR);document.getElementById('sumDDO').textContent=dec2(ddoT);
+
+    var crcB=document.getElementById('crcDetailBody');crcB.innerHTML='';var crcFootnotes=[];for(var e=0;e<crcD.length;e++){var cd=crcD[e];var gMark2=cd.guessed&&cd.guessed.length>0?' *':'';if(cd.guessed&&cd.guessed.length>0)for(var gi2=0;gi2<cd.guessed.length;gi2++)crcFootnotes.push(cd.date+': Flight time for '+cd.guessed[gi2]+' not in roster data. Estimated from STD/STA using scheduled flight time database.');crcB.innerHTML+='<tr><td>'+cd.date+'</td><td>'+cd.day+'</td><td><span class="tag '+cd.tag+'">'+cd.type+'</span></td><td>'+cd.sectors+'</td><td>'+dec2(cd.credit)+'</td><td>'+(cd.rig>0?dec2(cd.rig):'\u2014')+'</td><td>'+dec2(cd.final)+gMark2+'</td></tr>';}if(crcFootnotes.length>0){crcB.innerHTML+='<tr><td colspan="7" style="color:var(--orange);font-family:DM Sans,sans-serif;font-style:italic;padding-top:.75rem;white-space:normal">* '+crcFootnotes.join('<br>* ')+'</td></tr>';}
+    var drB=document.getElementById('draftDetailBody');drB.innerHTML='';var draftFootnotes=[];for(var f=0;f<draftD.length;f++){var dd=draftD[f];var gMark3=dd.guessed&&dd.guessed.length>0?' *':'';if(dd.guessed&&dd.guessed.length>0)for(var gi3=0;gi3<dd.guessed.length;gi3++)draftFootnotes.push(dd.date+': Flight time for '+dd.guessed[gi3]+' not in roster data. Estimated from STD/STA using scheduled flight time database.');drB.innerHTML+='<tr class="draft-row"><td>'+dd.date+'</td><td>'+dd.day+'</td><td>'+dd.pubDuty+'</td><td>'+dd.sectors+'</td><td>'+dec2(dd.credit)+'</td><td>'+(dd.rig>0?dec2(dd.rig):'\u2014')+'</td><td>'+dec2(dd.min5)+'</td><td>'+dec2(dd.final)+gMark3+'</td></tr>';}
+    if(!draftD.length)drB.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text2)">No draft days</td></tr>';
+    if(draftFootnotes.length>0){drB.innerHTML+='<tr><td colspan="8" style="color:var(--orange);font-family:DM Sans,sans-serif;font-style:italic;padding-top:.75rem;white-space:normal">* '+draftFootnotes.join('<br>* ')+'</td></tr>';}
+    var ddB=document.getElementById('ddoDetailBody');ddB.innerHTML='';for(var g=0;g<infs.length;g++){var inf=infs[g];ddB.innerHTML+='<tr class="infringement-row"><td>'+inf.blockDates+' ('+inf.ddoCount+' DDOs)</td><td>'+inf.requiredHrs+'h</td><td>'+inf.actualHrs+'h</td><td>'+inf.shortfallMins+' min</td><td>'+dec2(inf.credit)+'</td></tr>';}
+    if(!infs.length)ddB.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text2)">No infringements</td></tr>';
+
+    window._calcResults={otPaid:otP,draftTotal:draftR,ddoTotal:ddoT,rpEndDate:endDate};
+    document.getElementById('paySection').style.display='block';updatePayTable();
+
+    // Show config changes bar if new duty codes or SFT updates were made
+    var bar=document.getElementById('configChangesBar');
+    var hasDuty=window._newlyClassified&&window._newlyClassified.length>0;
+    var hasSFT=window._newlySFTUpdated&&window._newlySFTUpdated.length>0;
+    if(hasDuty||hasSFT){
+        bar.style.display='block';
+        var dutyDiv=document.getElementById('configChangesDuty');
+        var sftDiv=document.getElementById('configChangesSFT');
+        if(hasDuty){dutyDiv.style.display='block';document.getElementById('configChangesDutyList').textContent=window._newlyClassified.join(', ');}else{dutyDiv.style.display='none';}
+        if(hasSFT){sftDiv.style.display='block';document.getElementById('configChangesSFTList').textContent=window._newlySFTUpdated.join(', ');}else{sftDiv.style.display='none';}
+        window._newlyClassified=null;window._newlySFTUpdated=null;
+    }else{bar.style.display='none';}
+
+    document.getElementById('sftDisclaimer').style.display=_usedStaticDB?'block':'none';
+    document.getElementById('results').classList.add('show');document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+function updatePayTable(){
+    if(!window._calcResults)return;
+    var role=document.querySelector('input[name="role"]:checked').value,empType=document.querySelector('input[name="emptype"]:checked').value;
+    var payIdx=getPayPeriodIndex(window._calcResults.rpEndDate);
+    var salT=empType==='PT50'?SALARY_PT50:(empType==='PT75'?SALARY_PT75:SALARY_FT);
+    var annSal=salT[role][payIdx],stdH=STD_HOURS[empType],salRate=annSal/26/stdH,prodRate=PROD_RATES[role][payIdx];
+    var otH=window._calcResults.otPaid,drH=window._calcResults.draftTotal,ddH=window._calcResults.ddoTotal;
+    var sA=salRate*stdH,oA=prodRate*otH,dA=prodRate*drH,ddA=prodRate*ddH,tot=sA+oA+dA+ddA;
+    var fmt=function(v){return '$'+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');};
+    document.getElementById('paySalRate').textContent=fmt(salRate);document.getElementById('paySalHrs').textContent=stdH.toFixed(2);document.getElementById('paySalAmt').textContent=fmt(sA);
+    document.getElementById('payOTRate').textContent=fmt(prodRate);document.getElementById('payOTHrs').textContent=otH.toFixed(2);document.getElementById('payOTAmt').textContent=fmt(oA);
+    document.getElementById('payDraftRate').textContent=fmt(prodRate);document.getElementById('payDraftHrs').textContent=drH.toFixed(2);document.getElementById('payDraftAmt').textContent=fmt(dA);
+    document.getElementById('payDDORate').textContent=fmt(prodRate);document.getElementById('payDDOHrs').textContent=ddH.toFixed(2);document.getElementById('payDDOAmt').textContent=fmt(ddA);
+    document.getElementById('payTotal').textContent=fmt(tot);
+}
+document.querySelectorAll('input[name="role"],input[name="emptype"]').forEach(function(el){el.addEventListener('change',updatePayTable);});
+
+// ================================================================
+// SETTINGS TAB LOGIC
+// ================================================================
+
+var ROLES=['CPT','FO','CHKCPT','SNTCPT','TNCPT','TNFO'];
+var ROLE_LABELS={CPT:'Captain',FO:'First Officer',CHKCPT:'Check Cpt',SNTCPT:'Sr Trn Cpt',TNCPT:'Training Cpt',TNFO:'Training FO'};
+var _ghSHA=null;
+
+function switchTab(tab){
+    document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+    document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active');});
+    document.getElementById('tab-'+tab).classList.add('active');
+    document.querySelector('.tab-btn[data-tab="'+tab+'"]').classList.add('active');
+    if(tab==='settings')loadSettingsFromEngine();
+}
+
+function showToast(msg,type){
+    var t=document.getElementById('toast');
+    t.textContent=msg;t.className='toast show '+(type||'');
+    clearTimeout(t._tid);t._tid=setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+function toggleAccordion(header){
+    header.classList.toggle('open');
+    header.nextElementSibling.classList.toggle('open');
+}
+
+function loadSettingsFromEngine(){
+    document.getElementById('cfg_VLEARN_CREDIT').value=VLEARN_CREDIT;
+    document.getElementById('cfg_LEAVE_CREDIT').value=LEAVE_CREDIT;
+    document.getElementById('cfg_SBY_CREDIT').value=SBY_CREDIT;
+    document.getElementById('cfg_GROUND_CREDIT').value=GROUND_CREDIT;
+    document.getElementById('cfg_DRAFT_MINIMUM').value=DRAFT_MINIMUM;
+    document.getElementById('cfg_TVL_MINIMUM').value=TVL_MINIMUM;
+    document.getElementById('cfg_STD_FT').value=STD_HOURS.FT;
+    document.getElementById('cfg_STD_PT75').value=STD_HOURS.PT75;
+    document.getElementById('cfg_STD_PT50').value=STD_HOURS.PT50;
+    document.getElementById('cfg_year2Start').value=PAY_PERIOD_DATES.year2Start;
+    document.getElementById('cfg_year3Start').value=PAY_PERIOD_DATES.year3Start;
+    renderDutyChips('GROUND',GROUND_DUTIES);
+    renderDutyChips('LEAVE',LEAVE_DUTIES);
+    renderDutyChips('ZERO',ZERO_DUTIES);
+    renderSalaryTable('salaryTableFT',SALARY_FT,'sal_ft');
+    renderSalaryTable('salaryTablePT75',SALARY_PT75,'sal_pt75');
+    renderSalaryTable('salaryTablePT50',SALARY_PT50,'sal_pt50');
+    renderSalaryTable('prodRateTable',PROD_RATES,'prod');
+    renderSFTGrid();
+    renderRPTable();
+}
+
+// Duty code chips
+function renderDutyChips(type,arr){
+    var idMap={GROUND:'Ground',LEAVE:'Leave',ZERO:'Zero'};
+    var container=document.getElementById('chips'+idMap[type]);
+    var countEl=document.getElementById('count'+idMap[type]);
+    container.innerHTML='';
+    for(var i=0;i<arr.length;i++){
+        var chip=document.createElement('span');chip.className='chip';
+        chip.innerHTML=arr[i]+' <span class="chip-x" data-type="'+type+'" data-val="'+arr[i]+'" onclick="removeDutyChip(this)">&times;</span>';
+        container.appendChild(chip);
+    }
+    countEl.textContent=arr.length;
+}
+function removeDutyChip(el){
+    var type=el.getAttribute('data-type'),val=el.getAttribute('data-val');
+    var arr=type==='GROUND'?GROUND_DUTIES:(type==='LEAVE'?LEAVE_DUTIES:ZERO_DUTIES);
+    var idx=arr.indexOf(val);if(idx>-1)arr.splice(idx,1);
+    renderDutyChips(type,arr);
+}
+function addDutyChip(type){
+    var idMap={GROUND:'Ground',LEAVE:'Leave',ZERO:'Zero'};
+    var input=document.getElementById('add'+idMap[type]);
+    var val=input.value.trim().toUpperCase();if(!val)return;
+    var arr=type==='GROUND'?GROUND_DUTIES:(type==='LEAVE'?LEAVE_DUTIES:ZERO_DUTIES);
+    if(arr.indexOf(val)===-1){arr.push(val);arr.sort();}
+    renderDutyChips(type,arr);input.value='';
+}
+
+// Salary tables
+function renderSalaryTable(containerId,dataObj,prefix){
+    var html='<table class="editable-table"><thead><tr><th>Role</th><th>Year 1</th><th>Year 2</th><th>Year 3</th></tr></thead><tbody>';
+    for(var i=0;i<ROLES.length;i++){
+        var r=ROLES[i],vals=dataObj[r];
+        html+='<tr><td style="color:var(--text2);font-size:.75rem">'+ROLE_LABELS[r]+'</td>';
+        for(var j=0;j<3;j++)html+='<td><input type="number" step="0.01" value="'+vals[j]+'" id="'+prefix+'_'+r+'_'+j+'"></td>';
+        html+='</tr>';
+    }
+    html+='</tbody></table>';
+    document.getElementById(containerId).innerHTML=html;
+}
+
+// Scheduled flight times
+function renderSFTGrid(){
+    var grid=document.getElementById('sftGrid');
+    var keys=Object.keys(SCHED_FT).sort();
+    document.getElementById('sftCount').textContent=keys.length;
+    grid.innerHTML='';
+    for(var i=0;i<keys.length;i++){
+        grid.innerHTML+='<div class="sft-item"><span class="route">'+keys[i]+'</span><span class="time">'+SCHED_FT[keys[i]]+'</span><span class="sft-del" data-route="'+keys[i]+'" onclick="deleteSFT(this)">&times;</span></div>';
+    }
+}
+function addSFT(){
+    var route=document.getElementById('sftRoute').value.trim().toUpperCase();
+    var time=document.getElementById('sftTime').value.trim();
+    if(!route||!time)return;
+    SCHED_FT[route]=time;renderSFTGrid();
+    document.getElementById('sftRoute').value='';document.getElementById('sftTime').value='';
+    showToast('Added '+route+' \u2192 '+time,'success');
+}
+function deleteSFT(el){delete SCHED_FT[el.getAttribute('data-route')];renderSFTGrid();}
+
+// Roster periods table
+function renderRPTable(){
+    var body=document.getElementById('rpTableBody');body.innerHTML='';
+    for(var i=0;i<ROSTER_PERIODS.length;i++){
+        var rp=ROSTER_PERIODS[i];
+        body.innerHTML+='<tr><td><input type="text" value="'+rp.rp+'" data-idx="'+i+'" data-field="rp" style="width:110px"></td><td><input type="text" value="'+rp.start+'" data-idx="'+i+'" data-field="start" style="width:90px"></td><td><input type="text" value="'+rp.end+'" data-idx="'+i+'" data-field="end" style="width:90px"></td><td><input type="number" value="'+rp.mcg+'" data-idx="'+i+'" data-field="mcg" style="width:50px"></td><td class="row-delete" onclick="deleteRP('+i+')">&times;</td></tr>';
+    }
+}
+function deleteRP(idx){ROSTER_PERIODS.splice(idx,1);renderRPTable();}
+function addRosterPeriod(){
+    ROSTER_PERIODS.push({rp:'RP? - 20XX',start:'01-Jan-27',end:'28-Jan-27',mcg:0});
+    renderRPTable();
+    document.getElementById('rpTableWrap').scrollTop=99999;
+}
+
+// Read settings UI back into engine vars
+function readSettingsFromUI(){
+    VLEARN_CREDIT=parseFloat(document.getElementById('cfg_VLEARN_CREDIT').value)||0;
+    LEAVE_CREDIT=parseFloat(document.getElementById('cfg_LEAVE_CREDIT').value)||0;
+    SBY_CREDIT=parseFloat(document.getElementById('cfg_SBY_CREDIT').value)||0;
+    GROUND_CREDIT=parseFloat(document.getElementById('cfg_GROUND_CREDIT').value)||0;
+    DRAFT_MINIMUM=parseFloat(document.getElementById('cfg_DRAFT_MINIMUM').value)||0;
+    TVL_MINIMUM=parseFloat(document.getElementById('cfg_TVL_MINIMUM').value)||0;
+    STD_HOURS.FT=parseFloat(document.getElementById('cfg_STD_FT').value)||80;
+    STD_HOURS.PT75=parseFloat(document.getElementById('cfg_STD_PT75').value)||60;
+    STD_HOURS.PT50=parseFloat(document.getElementById('cfg_STD_PT50').value)||40;
+    PAY_PERIOD_DATES.year2Start=document.getElementById('cfg_year2Start').value||'2025-07-01';
+    PAY_PERIOD_DATES.year3Start=document.getElementById('cfg_year3Start').value||'2026-07-01';
+
+    var tables=[{obj:SALARY_FT,prefix:'sal_ft'},{obj:SALARY_PT75,prefix:'sal_pt75'},{obj:SALARY_PT50,prefix:'sal_pt50'},{obj:PROD_RATES,prefix:'prod'}];
+    for(var t=0;t<tables.length;t++){var tbl=tables[t];for(var r=0;r<ROLES.length;r++){var role=ROLES[r];for(var y=0;y<3;y++){var el=document.getElementById(tbl.prefix+'_'+role+'_'+y);if(el)tbl.obj[role][y]=parseFloat(el.value)||0;}}}
+
+    var rpInputs=document.querySelectorAll('#rpTableBody input');
+    var rpTemp={};
+    rpInputs.forEach(function(inp){
+        var idx=parseInt(inp.getAttribute('data-idx'),10),field=inp.getAttribute('data-field');
+        if(!rpTemp[idx])rpTemp[idx]={};
+        rpTemp[idx][field]=field==='mcg'?(parseFloat(inp.value)||0):inp.value;
+    });
+    var newRP=[];var keys=Object.keys(rpTemp).sort(function(a,b){return a-b;});
+    for(var i=0;i<keys.length;i++){var rp=rpTemp[keys[i]];newRP.push({rp:rp.rp||'',start:rp.start||'',end:rp.end||'',mcg:rp.mcg||0});}
+    if(newRP.length>0)ROSTER_PERIODS=newRP;
+}
+
+function applySettingsToEngine(){
+    readSettingsFromUI();populateRPDropdown();
+    showToast('Settings applied to calculator','success');
+}
+
+function buildConfigJSON(){
+    readSettingsFromUI();
+    return{
+        _meta:{version:1,updated:new Date().toISOString(),description:'Roster Credit Calculator config'},
+        creditValues:{VLEARN_CREDIT:VLEARN_CREDIT,LEAVE_CREDIT:LEAVE_CREDIT,SBY_CREDIT:SBY_CREDIT,GROUND_CREDIT:GROUND_CREDIT,DRAFT_MINIMUM:DRAFT_MINIMUM,TVL_MINIMUM:TVL_MINIMUM},
+        stdHours:STD_HOURS,
+        payPeriodDates:PAY_PERIOD_DATES,
+        dutyCodes:{GROUND_DUTIES:GROUND_DUTIES,LEAVE_DUTIES:LEAVE_DUTIES,ZERO_DUTIES:ZERO_DUTIES},
+        salaryTables:{SALARY_FT:SALARY_FT,SALARY_PT50:SALARY_PT50,SALARY_PT75:SALARY_PT75,PROD_RATES:PROD_RATES},
+        scheduledFlightTimes:SCHED_FT,
+        rosterPeriods:ROSTER_PERIODS
+    };
+}
+
+function loadFromConfigJSON(cfg){
+    if(cfg.creditValues){
+        if(cfg.creditValues.VLEARN_CREDIT!=null)VLEARN_CREDIT=cfg.creditValues.VLEARN_CREDIT;
+        if(cfg.creditValues.LEAVE_CREDIT!=null)LEAVE_CREDIT=cfg.creditValues.LEAVE_CREDIT;
+        if(cfg.creditValues.SBY_CREDIT!=null)SBY_CREDIT=cfg.creditValues.SBY_CREDIT;
+        if(cfg.creditValues.GROUND_CREDIT!=null)GROUND_CREDIT=cfg.creditValues.GROUND_CREDIT;
+        if(cfg.creditValues.DRAFT_MINIMUM!=null)DRAFT_MINIMUM=cfg.creditValues.DRAFT_MINIMUM;
+        if(cfg.creditValues.TVL_MINIMUM!=null)TVL_MINIMUM=cfg.creditValues.TVL_MINIMUM;
+    }
+    if(cfg.stdHours)STD_HOURS=cfg.stdHours;
+    if(cfg.payPeriodDates){
+        if(cfg.payPeriodDates.year2Start)PAY_PERIOD_DATES.year2Start=cfg.payPeriodDates.year2Start;
+        if(cfg.payPeriodDates.year3Start)PAY_PERIOD_DATES.year3Start=cfg.payPeriodDates.year3Start;
+    }
+    if(cfg.dutyCodes){
+        if(cfg.dutyCodes.GROUND_DUTIES)GROUND_DUTIES=cfg.dutyCodes.GROUND_DUTIES;
+        if(cfg.dutyCodes.LEAVE_DUTIES)LEAVE_DUTIES=cfg.dutyCodes.LEAVE_DUTIES;
+        if(cfg.dutyCodes.ZERO_DUTIES)ZERO_DUTIES=cfg.dutyCodes.ZERO_DUTIES;
+    }
+    if(cfg.salaryTables){
+        if(cfg.salaryTables.SALARY_FT)SALARY_FT=cfg.salaryTables.SALARY_FT;
+        if(cfg.salaryTables.SALARY_PT50)SALARY_PT50=cfg.salaryTables.SALARY_PT50;
+        if(cfg.salaryTables.SALARY_PT75)SALARY_PT75=cfg.salaryTables.SALARY_PT75;
+        if(cfg.salaryTables.PROD_RATES)PROD_RATES=cfg.salaryTables.PROD_RATES;
+    }
+    if(cfg.scheduledFlightTimes)SCHED_FT=cfg.scheduledFlightTimes;
+    if(cfg.rosterPeriods)ROSTER_PERIODS=cfg.rosterPeriods;
+    populateRPDropdown();
+}
+
+function exportConfigJSON(){
+    var cfg=buildConfigJSON();
+    var blob=new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='config.json';a.click();
+    URL.revokeObjectURL(url);showToast('config.json exported','success');
+}
+function importConfigJSON(){document.getElementById('importJSONFile').click();}
+document.getElementById('importJSONFile').addEventListener('change',function(e){
+    var f=e.target.files[0];if(!f)return;
+    var r=new FileReader();
+    r.onload=function(ev){try{loadFromConfigJSON(JSON.parse(ev.target.result));showToast('Config loaded from file','success');}catch(err){showToast('Invalid JSON: '+err.message,'error');}};
+    r.readAsText(f);e.target.value='';
+});
+
+// ================================================================
+// GITHUB API
+// ================================================================
+
+function ghGetCreds(){
+    return{token:document.getElementById('ghToken').value.trim(),owner:document.getElementById('ghOwner').value.trim(),repo:document.getElementById('ghRepo').value.trim(),branch:document.getElementById('ghBranch').value.trim()||'main',path:document.getElementById('ghPath').value.trim()||'config.json'};
+}
+function ghSetStatus(connected,msg){
+    var el=document.getElementById('ghStatus');
+    el.className='gh-status '+(connected?'connected':'disconnected');
+    el.innerHTML='<span class="dot"></span><span>'+msg+'</span>';
+}
+function ghSaveCredentials(){
+    var c=ghGetCreds();if(!c.token||!c.owner||!c.repo){showToast('Fill in token, owner, and repo','error');return;}
+    try{localStorage.setItem('rcc_gh',JSON.stringify(c));showToast('Credentials saved','success');}catch(e){showToast('Save failed: '+e.message,'error');}
+}
+function ghClearCredentials(){
+    try{localStorage.removeItem('rcc_gh');}catch(e){}
+    document.getElementById('ghToken').value='';document.getElementById('ghOwner').value='';document.getElementById('ghRepo').value='';
+    document.getElementById('ghBranch').value='main';document.getElementById('ghPath').value='config.json';
+    ghSetStatus(false,'Not connected');_ghSHA=null;showToast('Credentials cleared','success');
+}
+function ghLoadCredentials(){
+    try{var s=localStorage.getItem('rcc_gh');if(s){var c=JSON.parse(s);document.getElementById('ghToken').value=c.token||'';document.getElementById('ghOwner').value=c.owner||'';document.getElementById('ghRepo').value=c.repo||'';document.getElementById('ghBranch').value=c.branch||'main';document.getElementById('ghPath').value=c.path||'config.json';}}catch(e){}
+}
+
+async function ghConnect(){
+    var c=ghGetCreds();if(!c.token||!c.owner||!c.repo){showToast('Fill in all GitHub fields','error');return;}
+    ghSetStatus(false,'Connecting...');
+    try{
+        var url='https://api.github.com/repos/'+c.owner+'/'+c.repo+'/contents/'+c.path+'?ref='+c.branch;
+        var res=await fetch(url,{headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json'}});
+        if(res.status===200){
+            var data=await res.json();_ghSHA=data.sha;
+            var content=atob(data.content.replace(/\n/g,''));
+            loadFromConfigJSON(JSON.parse(content));
+            ghSetStatus(true,'Connected \u2014 loaded from '+c.owner+'/'+c.repo);
+            showToast('Config loaded from GitHub','success');
+        }else if(res.status===404){
+            _ghSHA=null;ghSetStatus(true,'Connected \u2014 no config.json yet (push to create)');
+            showToast('Connected. Push to create config.json.','success');
+        }else{
+            var err=await res.json().catch(function(){return{message:res.statusText};});
+            ghSetStatus(false,'Error: '+err.message);showToast('GitHub error: '+err.message,'error');
+        }
+    }catch(e){ghSetStatus(false,'Network error: '+e.message);showToast('Connection failed: '+e.message,'error');}
+}
+
+async function ghPush(){
+    var c=ghGetCreds();if(!c.token||!c.owner||!c.repo){showToast('Connect to GitHub first','error');return;}
+    var cfg=buildConfigJSON();
+    var content=btoa(unescape(encodeURIComponent(JSON.stringify(cfg,null,2))));
+    var body={message:'Update config.json via Roster Credit Calculator',content:content,branch:c.branch};
+    if(_ghSHA)body.sha=_ghSHA;
+    try{
+        var url='https://api.github.com/repos/'+c.owner+'/'+c.repo+'/contents/'+c.path;
+        var res=await fetch(url,{method:'PUT',headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+        var data=await res.json();
+        if(res.status===200||res.status===201){
+            _ghSHA=data.content.sha;
+            ghSetStatus(true,'Connected \u2014 pushed '+new Date().toLocaleTimeString());
+            showToast('Pushed to GitHub','success');
+        }else{showToast('Push failed: '+(data.message||res.statusText),'error');}
+    }catch(e){showToast('Push failed: '+e.message,'error');}
+}
+
+// Auto-load saved credentials
+ghLoadCredentials();
+
+// Auto-load config.json on page load
+(async function autoLoadConfig(){
+    // 1. Try loading config.json from same directory (works on GitHub Pages / any web server)
+    try{
+        var res=await fetch('config.json?_t='+Date.now(),{cache:'no-store'});
+        if(res.ok){
+            var cfg=await res.json();
+            loadFromConfigJSON(cfg);
+            console.log('[RCC] Loaded config.json from local path');
+            return;
+        }
+    }catch(e){/* not served locally, try GitHub */}
+
+    // 2. Fall back to GitHub API if credentials are saved
+    var c=ghGetCreds();
+    if(c.token&&c.owner&&c.repo){
+        try{
+            var url='https://api.github.com/repos/'+c.owner+'/'+c.repo+'/contents/'+c.path+'?ref='+c.branch;
+            var res2=await fetch(url,{headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json'}});
+            if(res2.status===200){
+                var data=await res2.json();_ghSHA=data.sha;
+                var content=atob(data.content.replace(/\n/g,''));
+                loadFromConfigJSON(JSON.parse(content));
+                ghSetStatus(true,'Auto-loaded from '+c.owner+'/'+c.repo);
+                console.log('[RCC] Auto-loaded config.json from GitHub API');
+                return;
+            }
+        }catch(e){console.log('[RCC] GitHub auto-load failed:',e.message);}
+    }
+    console.log('[RCC] Using built-in defaults');
+})();
+
+// Enter key support for duty code inputs
+['addGround','addLeave','addZero'].forEach(function(id){
+    document.getElementById(id).addEventListener('keydown',function(e){
+        if(e.key==='Enter'){e.preventDefault();addDutyChip(id.replace('add','').toUpperCase());}
+    });
+});
+</script>
+</body>
+</html>
