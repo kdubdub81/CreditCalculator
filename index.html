@@ -880,128 +880,139 @@ function parseSabreEmail(text){
     return csvRows.join('\n');
 }
 function parseRosterReport(text){
-    // Auto-detect roster type from content
+    // 1. Determine roster type from header
     var isCompleted=/Actual\s*(Flight|Duty)\s*Times/i.test(text);
-    var label=isCompleted?'Complete':'Publish';
+    var rosterType=isCompleted?'Completed':'Publish';
 
-    // Find column headers and strip header/footer
-    var headerRx=/Start DateDayFlight NumberSectorA\/CDutyPairing DutyRptSTDSTASign OffFlt TimeDuty TimeHotelTrainingRemarks/;
-    var hm=text.match(headerRx);
-    if(!hm)throw new Error('Could not find column headers in Roster Report. Make sure you copied the full page including the table header row.');
-    var dataText=text.substring(hm.index+hm[0].length);
-    dataText=dataText.replace(/Found \d+ items.*$/,'').replace(/\n/g,' ').trim();
+    // 2. Extract data portion (after column headers, before footer)
+    var headerIdx=text.indexOf('Remarks');
+    if(headerIdx<0)throw new Error('Could not find table header in Roster Report. Make sure you copied the full page.');
+    var data=text.substring(headerIdx+7);
+    var footerIdx=data.indexOf('Found ');
+    if(footerIdx>=0)data=data.substring(0,footerIdx);
+    data=data.replace(/\n/g,' ').trim();
 
-    // Split by date boundaries: DDMMMYYDDD (e.g. 16FEB26MON)
-    var dateRx=/(\d{2}[A-Z]{3}\d{2})(MON|TUE|WED|THU|FRI|SAT|SUN)/g;
-    var positions=[],dm;
-    while((dm=dateRx.exec(dataText))!==null){positions.push({date:dm[1],day:dm[2],pos:dm.index,endPos:dm.index+dm[0].length});}
-    if(positions.length===0)throw new Error('No roster dates found in pasted data.');
-    var dayBlocks=[];
-    for(var i=0;i<positions.length;i++){
-        var start=positions[i].endPos;
-        var end=(i+1<positions.length)?positions[i+1].pos:dataText.length;
-        dayBlocks.push({date:positions[i].date,day:positions[i].day,content:dataText.substring(start,end)});
+    // 3. Split into day groups by date+day pattern
+    var dayPattern=/(\d{2}[A-Z]{3}\d{2})(MON|TUE|WED|THU|FRI|SAT|SUN)/g;
+    var matches=[],m;
+    while((m=dayPattern.exec(data))!==null)matches.push({date:m[1],day:m[2],idx:m.index,len:m[0].length});
+    if(matches.length===0)throw new Error('No roster dates found in pasted data.');
+    var dayGroups=[];
+    for(var i=0;i<matches.length;i++){
+        var start=matches[i].idx+matches[i].len;
+        var end=(i+1<matches.length)?matches[i+1].idx:data.length;
+        dayGroups.push({date:matches[i].date,day:matches[i].day,content:data.substring(start,end)});
     }
 
-    var DAYOFF_CODES=['DDO','BLANK','PDO','RDO','ADO','ALV','ALVA','ALVC','ALVS','SICK','SICD','LSL','SOCT','SOCDD','TOIL'];
-    var csvRows=[label,'Start Date,Day,Flight Number,Sector,A/C,Duty,Pairing Duty,Rpt,STD,STA,Sign Off,Flt Time,Duty Time,Hotel,Training,Remarks'];
+    // 4. Known patterns
+    var AC_RE=/^(73[HWN]|7M8|7HW|32[0-9A-Z]|E[0-9]{2}|AT[0-9]|CS[0-9]|CR[0-9J]|DH[0-9]|ER[0-9J]|SFH|SF3|100)/;
+    var DUTY_NAMES=['FLY','TVL','NTSSEP','NTSADM','NTSADH','NTS','SEP','SIM','CSIM','RTP','TTT','EPT','CRM','UPRT','DDO','BLANK','PDO','RDO','ADO','ALVA','ALVC','ALVS','ALV','SICK','SICD','LSL','SOCT','SOCDD','TOIL','LO'];
+    var DAYOFF=['DDO','BLANK','PDO','RDO','ADO','ALV','ALVA','ALVC','ALVS','SICK','SICD','LSL','SOCT','SOCDD','TOIL'];
+    var TRAINING=['NTS','NTSSEP','NTSADM','NTSADH','SEP','SIM','CSIM','RTP','TTT','EPT','CRM','UPRT','VSEP','VSIM'];
+    var DUTY_SORTED=DUTY_NAMES.slice().sort(function(a,b){return b.length-a.length;});
 
-    // Flight row regex: captures 4-digit groups individually to avoid digit bleeding
-    var flightRx=/^((?:VA|DH) \d{4})([A-Z]{3} [A-Z]{3})(\w{2,3})(FLY|TVL)(CPT|FO|DIS)?(\s*)(\d{4})(\d{4})(\d{4})?(\d{4})?(.*)/;
+    function matchDuty(s){
+        for(var i=0;i<DUTY_SORTED.length;i++){if(s.substring(0,DUTY_SORTED[i].length)===DUTY_SORTED[i])return DUTY_SORTED[i];}
+        var sby=s.match(/^(SBY\d{2})/);if(sby)return sby[1];
+        var rtp=s.match(/^(RTP\d[^\s]*)/);if(rtp)return rtp[1];
+        return null;
+    }
+    function isTraining(d){for(var i=0;i<TRAINING.length;i++)if(d===TRAINING[i]||d.indexOf(TRAINING[i])===0)return true;return/^RTP/.test(d);}
 
-    for(var d=0;d<dayBlocks.length;d++){
-        var date=dayBlocks[d].date,day=dayBlocks[d].day,content=dayBlocks[d].content;
-        // Split into row-level parts at flight or ground-duty-continuation boundaries
-        var parts=content.split(/(?=(?:VA|DH) \d{4})|(?=[A-Z]{3}-[A-Z])/);
+    // 5. Parse rows from a day's content
+    function parseRows(content,date,day){
+        var s=content,rows=[];
+        var safety=0;
+        while(s.length>0&&safety<20){
+            safety++;
+            s=s.replace(/^\s+/,'');
+            if(!s)break;
 
-        for(var p=0;p<parts.length;p++){
-            var part=parts[p].trim();
-            if(!part)continue;
+            var flt='',sector='',ac='',duty='',pair='',rpt='',std='',sta='',soff='',fltTime='',dutyTime='',hotel='',training='',remarks='';
 
-            // --- FLIGHT ROW ---
-            var fm=part.match(flightRx);
-            if(fm){
-                var fltNum=fm[1],sector=fm[2],ac=fm[3],duty=fm[4];
-                var pDuty=fm[5]||'',gap=fm[6],g7=fm[7],g8=fm[8],g9=fm[9]||'',g10=fm[10]||'';
-                var rest=fm[11]||'';
-                // Determine if Rpt field is present based on space gap
-                // PairingDuty present + no gap = Rpt present; PairingDuty absent + 1 space gap = Rpt present
-                var hasRpt=pDuty?(gap.length===0):(gap.length<=1);
-                var rpt,std,sta,signOff;
-                if(hasRpt){rpt=g7;std=g8;sta=g9;signOff=g10;}
-                else{rpt='';std=g7;sta=g8;signOff=g9;}
-                // Parse HH:MM times from remainder
-                var fltTime='',dutyTime='';
-                var hmTimes=rest.match(/\d{1,2}:\d{2}/g)||[];
-                if(hmTimes.length>=2){fltTime=hmTimes[0];dutyTime=hmTimes[1];}
-                else if(hmTimes.length===1){
-                    // 2+ leading spaces = empty FltTime, value is DutyTime
-                    var spBefore=(rest.match(/^(\s*)/)||['',''])[1].length;
-                    if(spBefore>=2){dutyTime=hmTimes[0];}else{fltTime=hmTimes[0];}
-                }
-                if(fltTime&&fltTime.length===4)fltTime='0'+fltTime;
-                if(dutyTime&&dutyTime.length===4)dutyTime='0'+dutyTime;
-                var remarks='';var rmkM=rest.match(/#[^\d].*/);if(rmkM)remarks=rmkM[0].trim();
-                csvRows.push(date+','+day+','+fltNum+','+sector+','+ac+','+duty+','+pDuty+','+rpt+','+std+','+sta+','+signOff+','+fltTime+','+dutyTime+',,,'+remarks);
-                continue;
+            // Flight Number
+            var fltM=s.match(/^(VA|DH) (\d{4})/);
+            var hasFlight=!!fltM;
+            if(fltM){flt=fltM[1]+' '+fltM[2];s=s.substring(fltM[0].length);}
+
+            // Sector
+            if(hasFlight){
+                var sec2=s.match(/^([A-Z]{3}) ([A-Z]{3})/);
+                if(sec2){sector=sec2[1]+' '+sec2[2];s=s.substring(sec2[0].length);}
+            }else{
+                var sec1=s.match(/^([A-Z]{3})/);
+                if(sec1){sector=sec1[1];s=s.substring(3);}
             }
 
-            // --- GROUND DUTY CONTINUATION (BNE-NTS, SYD-SBY03 pattern) ---
-            var gc=part.match(/^([A-Z]{3})-(LO|[A-Z0-9]{2,})\s*(.*)/);
-            if(gc){
-                if(gc[2]==='LO')continue; // Skip layover rows
-                var gSector=gc[1],gDuty=gc[2],gRest=gc[3]||'';
-                var gDigits=gRest.match(/(\d{4})(\d{4})(\d{4})?(\d{4})?/);
-                var gRpt='',gStd='',gSta='',gSignOff='';
-                if(gDigits){
-                    var gSp=(gRest.match(/^(\s*)/)||['',''])[1].length;
-                    // 2+ spaces before digits = no Rpt
-                    if(gSp>=2||!gDigits[3]){gStd=gDigits[1];gSta=gDigits[2];gSignOff=gDigits[3]||'';}
-                    else{gRpt=gDigits[1];gStd=gDigits[2];gSta=gDigits[3]||'';gSignOff=gDigits[4]||'';}
-                }
-                var gTimes=gRest.match(/\d{1,2}:\d{2}/g)||[];
-                var gFltTime=gTimes[0]||'',gDutyTime=gTimes[1]||'';
-                if(gFltTime&&gFltTime.length===4)gFltTime='0'+gFltTime;
-                if(gDutyTime&&gDutyTime.length===4)gDutyTime='0'+gDutyTime;
-                var gTraining='';
-                var gTrng=gRest.match(/\b(NTS|NTSSEP|NTSADM|NTSADH|SEP|SIM|RTP\S*|TTT|EPT|CRM|UPRT)\s*$/i);
-                if(gTrng)gTraining=gTrng[1];
-                else if(/NTS|SEP|SIM|CSIM|RTP|TTT|EPT|CRM|UPRT/i.test(gDuty))gTraining=gDuty;
-                csvRows.push(date+','+day+',,'+gSector+',-,'+gDuty+',,'+gRpt+','+gStd+','+gSta+','+gSignOff+','+gFltTime+','+gDutyTime+',,'+gTraining+',');
-                continue;
-            }
+            // A/C
+            var acM=s.match(AC_RE);
+            if(acM){ac=acM[1];s=s.substring(acM[0].length);}
+            else if(s.charAt(0)==='-'){ac='-';s=s.substring(1);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
 
-            // --- DAY-OFF or GROUND DUTY FIRST ROW (SYD DDO / SYD NTS ...) ---
-            var fr=part.match(/^([A-Z]{3})\s+([A-Z0-9]+)\s*(.*)/);
-            if(fr){
-                var fSector=fr[1],fDutyCode=fr[2],fRest=fr[3]||'';
-                var isDayOff=false;
-                for(var x=0;x<DAYOFF_CODES.length;x++){if(fDutyCode===DAYOFF_CODES[x]){isDayOff=true;break;}}
-                if(isDayOff){
-                    var doRemarks='';var doRmk=fRest.match(/#[^\d].*/);if(doRmk)doRemarks=doRmk[0].trim();
-                    csvRows.push(date+','+day+',,'+fSector+',,'+fDutyCode+',,,,,,,0,,,'+doRemarks);
-                    continue;
-                }
-                // Ground duty (NTS, NTSSEP, SBY03, etc.)
-                var fDigits=fRest.match(/(\d{4})(\d{4})(\d{4})?(\d{4})?/);
-                var fRpt='',fStd='',fSta='',fSignOff='';
-                if(fDigits){
-                    if(fDigits[3]){fRpt=fDigits[1];fStd=fDigits[2];fSta=fDigits[3]||'';fSignOff=fDigits[4]||'';}
-                    else{fStd=fDigits[1];fSta=fDigits[2];}
-                }
-                var fTimes=fRest.match(/\d{1,2}:\d{2}/g)||[];
-                var fDutyTime=fTimes[0]||'';
-                if(fDutyTime&&fDutyTime.length===4)fDutyTime='0'+fDutyTime;
-                var fTraining='';
-                var fTrng=fRest.match(/\b(NTS|NTSSEP|NTSADM|NTSADH|SEP|SIM|RTP\S*|TTT|EPT|CRM|UPRT)\s*$/i);
-                if(fTrng)fTraining=fTrng[1];
-                else if(/NTS|SEP|SIM|CSIM|RTP|TTT|EPT|CRM|UPRT/i.test(fDutyCode))fTraining=fDutyCode;
-                csvRows.push(date+','+day+',,'+fSector+',,'+fDutyCode+',,'+fRpt+','+fStd+','+fSta+','+fSignOff+',,'+fDutyTime+',,'+fTraining+',');
-                continue;
+            // Duty
+            var dutyCode=matchDuty(s);
+            if(dutyCode){duty=dutyCode;s=s.substring(dutyCode.length);}
+
+            // Pairing Duty
+            var pairM=s.match(/^(CPT|FO|DIS)/);
+            if(pairM){pair=pairM[1];s=s.substring(pairM[0].length);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Time fields: Rpt, STD, STA, Sign Off (each 4 digits or blank space)
+            var tf=[];
+            for(var t=0;t<4;t++){
+                var tm=s.match(/^(\d{4})/);
+                if(tm){tf.push(tm[1]);s=s.substring(4);}
+                else if(s.charAt(0)===' '){tf.push('');s=s.substring(1);}
+                else{tf.push('');break;}
             }
+            while(tf.length<4)tf.push('');
+            rpt=tf[0];std=tf[1];sta=tf[2];soff=tf[3];
+
+            // Flt Time
+            var ftM=s.match(/^(\d{2}:\d{2})/);
+            if(ftM){fltTime=ftM[1];s=s.substring(5);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Duty Time
+            var dtM=s.match(/^(\d{2}:\d{2})/);
+            if(dtM){dutyTime=dtM[1];s=s.substring(5);}
+            else if(s.match(/^0(?:\s|$)/)){dutyTime='0';s=s.substring(1);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Hotel (blank space)
+            if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Training
+            var trCode=matchDuty(s);
+            if(trCode&&isTraining(trCode)){training=trCode;s=s.substring(trCode.length);}
+            else if(s.charAt(0)===' '){s=s.substring(1);}
+
+            // Remarks: consume until next flight or ground-duty continuation row
+            var nextFlt=s.search(/(?:VA|DH) \d{4}/);
+            var nextGnd=s.search(/[A-Z]{3}[-][A-Z]/);
+            var nextEnd=-1;
+            if(nextFlt>=0&&nextGnd>=0)nextEnd=Math.min(nextFlt,nextGnd);
+            else if(nextFlt>=0)nextEnd=nextFlt;
+            else if(nextGnd>=0)nextEnd=nextGnd;
+
+            if(nextEnd>0){remarks=s.substring(0,nextEnd).trim();s=s.substring(nextEnd);}
+            else{remarks=s.trim();s='';}
+
+            rows.push(date+','+day+','+flt+','+sector+','+ac+','+duty+','+pair+','+rpt+','+std+','+sta+','+soff+','+fltTime+','+dutyTime+','+hotel+','+training+','+remarks);
         }
+        return rows;
     }
-    if(csvRows.length<=2)throw new Error('No roster data found in Roster Report');
+
+    // 6. Process all days
+    var csvRows=[rosterType,'Start Date,Day,Flight Number,Sector,A/C,Duty,Pairing Duty,Rpt,STD,STA,Sign Off,Flt Time,Duty Time,Hotel,Training,Remarks'];
+    for(var g=0;g<dayGroups.length;g++){
+        var parsed=parseRows(dayGroups[g].content,dayGroups[g].date,dayGroups[g].day);
+        for(var r=0;r<parsed.length;r++)csvRows.push(parsed[r]);
+    }
+
+    if(csvRows.length<=2)throw new Error('No roster data found in pasted Roster Report.');
     return csvRows.join('\n');
 }
 
