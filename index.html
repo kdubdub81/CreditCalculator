@@ -36,6 +36,10 @@ input[type="file"]{display:none}
 .tag{display:inline-block;font-size:.65rem;padding:.15rem .4rem;border-radius:4px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .tag-fly{background:rgba(88,166,255,.2);color:var(--accent)}.tag-tvl{background:rgba(63,185,80,.2);color:var(--green)}.tag-sby{background:rgba(210,153,34,.2);color:var(--orange)}.tag-gnd{background:rgba(188,140,255,.2);color:var(--purple)}.tag-lve{background:rgba(248,81,73,.2);color:var(--red)}.tag-off{background:rgba(139,148,158,.2);color:var(--text2)}
 .radio-label{display:inline-flex;align-items:center;gap:.35rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.4rem .65rem;font-size:.8rem;cursor:pointer;transition:border-color .2s}.radio-label:hover{border-color:var(--accent)}.radio-label input[type="radio"]{accent-color:var(--accent);margin:0}
+.paste-box{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.65rem .75rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;resize:vertical;min-height:80px;line-height:1.5}
+.paste-box:focus{outline:none;border-color:var(--accent)}
+.paste-box::placeholder{color:var(--text2);opacity:.5;font-family:'DM Sans',sans-serif;font-size:.85rem;font-style:italic}
+.paste-status{font-size:.75rem;color:var(--text2)}.paste-status.ok{color:var(--green)}.paste-status.err{color:var(--red)}
 .pay-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:.5rem}.pay-table th{text-align:left;color:var(--text2);font-weight:500;padding:.5rem;border-bottom:1px solid var(--border)}.pay-table td{padding:.5rem;border-bottom:1px solid var(--border);font-size:.8rem}.pay-table tfoot td{padding:.6rem .5rem;border-bottom:none}
 .error-msg{background:rgba(248,81,73,.1);border:1px solid var(--red);border-radius:8px;padding:.75rem;color:var(--red);font-size:.85rem;margin-bottom:1rem;display:none}.error-msg.show{display:block}
 .divider{height:1px;background:var(--border);margin:1rem 0}
@@ -125,7 +129,44 @@ input[type="file"]{display:none}
 <div class="tab-content active" id="tab-calculator">
 <div id="errorMsg" class="error-msg"></div>
 <div class="card"><div class="card-title">1. Select Roster Period</div><label>Roster Period</label><select id="rpSelect"><option value="">&mdash; Select a roster period &mdash;</option></select><div id="rpInfo" style="font-size:.8rem;color:var(--text2)"></div></div>
-<div class="card"><div class="card-title">2. Load Roster Files</div><label>Published Roster (RosterPublish.csv)</label><label class="file-label" id="pubLabel"><span class="icon">&#128196;</span><span>Tap to select RosterPublish.csv</span><span class="status" id="pubStatus">Not loaded</span></label><input type="file" id="pubFile" accept=".csv,.txt"><label>Completed Roster (RosterComplete.csv)</label><label class="file-label" id="compLabel"><span class="icon">&#128196;</span><span>Tap to select RosterComplete.csv</span><span class="status" id="compStatus">Not loaded</span></label><input type="file" id="compFile" accept=".csv,.txt"></div>
+<div class="card">
+<div class="card-title">2. Load Published Roster</div>
+<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">
+<label class="radio-label"><input type="radio" name="pubSource" value="sabre" onchange="togglePubSource()"> Sabre Email</label>
+<label class="radio-label"><input type="radio" name="pubSource" value="rosterreport" onchange="togglePubSource()"> Roster Report</label>
+<label class="radio-label"><input type="radio" name="pubSource" value="csv" onchange="togglePubSource()" checked> Custom CSV File</label>
+</div>
+<div id="pubPasteWrap" style="display:none">
+<textarea id="pubPaste" class="paste-box mono" placeholder="Please paste the Published Roster here." rows="6"></textarea>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.35rem">
+<span class="paste-status" id="pubPasteStatus"></span>
+<button class="btn-sm primary" onclick="processPubPaste()">Process</button>
+</div>
+</div>
+<div id="pubFileWrap">
+<label class="file-label" id="pubLabel"><span class="icon">&#128196;</span><span>Tap to select RosterPublish.csv</span><span class="status" id="pubStatus">Not loaded</span></label>
+<input type="file" id="pubFile" accept=".csv,.txt">
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">3. Load Completed Roster <span style="font-weight:400;text-transform:none;font-size:.75rem;color:var(--text2)">(optional)</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem">
+<label class="radio-label"><input type="radio" name="compSource" value="rosterreport" onchange="toggleCompSource()"> Roster Report</label>
+<label class="radio-label"><input type="radio" name="compSource" value="csv" onchange="toggleCompSource()" checked> Custom CSV File</label>
+</div>
+<div id="compPasteWrap" style="display:none">
+<textarea id="compPaste" class="paste-box mono" placeholder="Please paste the Completed Roster here." rows="6"></textarea>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.35rem">
+<span class="paste-status" id="compPasteStatus"></span>
+<button class="btn-sm primary" onclick="processCompPaste()">Process</button>
+</div>
+</div>
+<div id="compFileWrap">
+<label class="file-label" id="compLabel"><span class="icon">&#128196;</span><span>Tap to select RosterComplete.csv</span><span class="status" id="compStatus">Not loaded</span></label>
+<input type="file" id="compFile" accept=".csv,.txt">
+</div>
+</div>
 <button class="btn" id="calcBtn" disabled onclick="runCalculation()">Calculate</button>
 <div class="results" id="results"><div class="divider"></div>
 <div class="card" id="cardRCP"><div class="card-title">Roster Credit Protection (Published)</div><div class="result-row"><span class="result-label">Total Published Credit</span><span class="result-value mono" id="rcpTotal">&mdash;</span></div><div class="result-row"><span class="result-label">+ Vlearn</span><span class="result-value mono">0.75</span></div><div class="result-row"><span class="result-label">Roster Credit Protection Total</span><span class="result-value mono highlight" id="rcpFinal">&mdash;</span></div><div class="result-row"><span class="result-label" id="rcpMcgLabel">Less MCG (&mdash;)</span><span class="result-value mono" id="rcpMinusMCG">&mdash;</span></div><span class="detail-toggle" onclick="toggleDetail('rcpDetail')">Show daily breakdown &#9662;</span><table class="detail-table" id="rcpDetail"><thead><tr><th>Date</th><th>Day</th><th>Type</th><th>Sectors</th><th>Credit</th><th>Rig</th><th>Final</th></tr></thead><tbody id="rcpDetailBody"></tbody></table></div>
@@ -633,6 +674,367 @@ document.getElementById('pubLabel').addEventListener('click',function(){document
 document.getElementById('compLabel').addEventListener('click',function(){document.getElementById('compFile').click();});
 document.getElementById('pubFile').addEventListener('change',function(e){var f=e.target.files[0];if(f){var r=new FileReader();r.onload=function(ev){pubData=parseCSV(ev.target.result);document.getElementById('pubStatus').textContent=pubData.length+' rows';document.getElementById('pubLabel').classList.add('loaded');checkReady();};r.readAsText(f);}});
 document.getElementById('compFile').addEventListener('change',function(e){var f=e.target.files[0];if(f){var r=new FileReader();r.onload=function(ev){compData=parseCSV(ev.target.result);document.getElementById('compStatus').textContent=compData.length+' rows';document.getElementById('compLabel').classList.add('loaded');checkReady();};r.readAsText(f);}});
+
+// -- Source toggle --
+function togglePubSource(){
+    var src=document.querySelector('input[name="pubSource"]:checked').value;
+    document.getElementById('pubFileWrap').style.display=(src==='csv')?'block':'none';
+    document.getElementById('pubPasteWrap').style.display=(src!=='csv')?'block':'none';
+    document.getElementById('pubPaste').value='';
+    document.getElementById('pubPasteStatus').textContent='';
+}
+function toggleCompSource(){
+    var src=document.querySelector('input[name="compSource"]:checked').value;
+    document.getElementById('compFileWrap').style.display=(src==='csv')?'block':'none';
+    document.getElementById('compPasteWrap').style.display=(src!=='csv')?'block':'none';
+    document.getElementById('compPaste').value='';
+    document.getElementById('compPasteStatus').textContent='';
+}
+
+// -- Paste processing --
+// Format parsers: each converts pasted text into standard CSV text
+// These are stubs that will be implemented when formats are defined
+function parsePastedRoster(text,source){
+    if(source==='sabre') return parseSabreEmail(text);
+    if(source==='rosterreport') return parseRosterReport(text);
+    return text; // CSV passthrough
+}
+function parseSabreEmail(text){
+    var lines=text.split('\n');
+    var MONTHS={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+    var MONTH_NAMES=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    var DAY_NAMES=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+    // 1. Parse header
+    var fromDate=null,toDate=null,rank='CPT',base='SYD';
+    for(var h=0;h<Math.min(lines.length,30);h++){
+        var hl=lines[h].trim();
+        var fm=hl.match(/From:\s*(\d{2})([A-Z]{3})(\d{4})\s+To:\s*(\d{2})([A-Z]{3})(\d{4})/);
+        if(fm){fromDate=new Date(parseInt(fm[3]),MONTHS[fm[2]],parseInt(fm[1]));toDate=new Date(parseInt(fm[6]),MONTHS[fm[5]],parseInt(fm[4]));}
+        var rm=hl.match(/Rank:\s*([A-Z]+)/);if(rm)rank=rm[1];
+        var bm=hl.match(/Base:\s*([A-Z]+)/);if(bm)base=bm[1];
+    }
+    if(!fromDate||!toDate)throw new Error('Could not parse date range from Sabre email header');
+
+    // 2. Find detail section
+    var detailStart=-1;
+    for(var i=0;i<lines.length;i++){
+        if(lines[i].match(/^\s*Day\s+Acty\s+C\s+SignIn/)){
+            for(var j=i+1;j<lines.length;j++){if(lines[j].match(/^_{10,}/)){detailStart=j+1;break;}}
+            break;
+        }
+    }
+    if(detailStart<0)throw new Error('Could not find detail section in Sabre email');
+
+    // 3. Date tracking
+    var currentMonth=fromDate.getMonth(),currentYear=fromDate.getFullYear(),lastDayNum=0;
+    function resolveDate(dayNum){
+        if(dayNum<lastDayNum){currentMonth++;if(currentMonth>11){currentMonth=0;currentYear++;}}
+        lastDayNum=dayNum;
+        return new Date(currentYear,currentMonth,dayNum);
+    }
+    function fmtDate(dt){return(dt.getDate()<10?'0':'')+dt.getDate()+MONTH_NAMES[dt.getMonth()]+(dt.getFullYear()%100<10?'0':'')+(dt.getFullYear()%100);}
+    function cleanT(s){return(s||'').replace(/\*/g,'');}
+    function isFlightNum(s){return/^\d{3,4}$/.test(s);}
+    function isTimeStr(s){return/^\d{4}\*?$/.test(s);}
+
+    // Training pairing patterns - flights within these are TVL
+    var TRAIN_ACTY=/^(NTS|RTP|SEP|SIM|CSIM|TTT|EPT)/i;
+    // Known day-off activity codes
+    var DAYOFF_CODES=['DDO','BLANK','PDO','RDO','ADO','ALV','ALVA','ALVC','ALVS','SICK','SICD','LSL','SOCT','SOCDD','TOIL'];
+
+    // 4. Parse detail lines
+    var csvRows=['Publish','Start Date,Day,Flight Number,Sector,A/C,Duty,Pairing Duty,Rpt,STD,STA,Sign Off,Flt Time,Duty Time,Hotel,Training,Remarks'];
+    var currentDayDate=null,currentActy='';
+
+    for(var i=detailStart;i<lines.length;i++){
+        var line=lines[i];
+        if(line.match(/All times displayed are local/))break;
+        if(line.match(/\*{4}\s*END OF REPORT/))break;
+        if(line.match(/^\s*$/))continue;
+        if(line.match(/^\s*[A-Z]{2,5}\s*:\s/))continue;
+        if(line.match(/^\s*Comments:/i))continue;
+        if(line.match(/^_{5,}/))continue;
+        if(line.match(/^\s*Trng\s+StrDt/))break;
+
+        var newDay=line.match(/^(\d{1,2})\s+(\S+)(.*)$/);
+        var cont=line.match(/^\s{2,}(\S+)(.*)$/);
+        if(!newDay&&!cont)continue;
+
+        var acty,afterActy,isNew;
+        if(newDay){
+            var dayNum=parseInt(newDay[1],10);
+            acty=newDay[2];
+            afterActy=line.replace(/^\d{1,2}\s+\S+/,'');
+            isNew=true;
+            currentDayDate=resolveDate(dayNum);
+            currentActy=acty;
+        }else{
+            acty=cont[1];
+            afterActy=line.replace(/^\s+\S+/,'');
+            isNew=false;
+        }
+        if(!currentDayDate)continue;
+
+        // Skip dates outside report range (LO lines from prior period)
+        if(currentDayDate<fromDate||currentDayDate>toDate)continue;
+
+        var dateStr=fmtDate(currentDayDate);
+        var dayName=DAY_NAMES[currentDayDate.getDay()];
+
+        // Parse tokens after activity code
+        var tokens=afterActy.trim().split(/\s+/);
+
+        // Skip LO/RST lines
+        if(tokens.length>0&&(tokens[0]==='LO'||tokens[0]==='RST'))continue;
+
+        // Day-off types (new day only)
+        if(isNew){
+            var isDayOff=false;
+            for(var x=0;x<DAYOFF_CODES.length;x++){if(acty===DAYOFF_CODES[x]){isDayOff=true;break;}}
+            if(isDayOff){
+                csvRows.push(dateStr+','+dayName+',,'+base+',,'+acty+',,,,,,,0,,,');
+                continue;
+            }
+        }
+
+        var idx=0;
+        // Deadhead marker
+        var isDH=false;
+        if(tokens[idx]==='D'){isDH=true;idx++;}
+
+        // Sign-in (new day first leg only)
+        var signIn='';
+        if(isNew&&tokens[idx]&&isTimeStr(tokens[idx])){signIn=cleanT(tokens[idx]);idx++;}
+
+        // Flight/duty code
+        var flightOrDuty=tokens[idx]||'';idx++;
+
+        // Check if ground duty has embedded city (NTSADMSYD -> NTSADM+SYD)
+        // If so, next token is time not city - need to adjust parsing
+        var embeddedCity='';
+        if(!isFlightNum(flightOrDuty)){
+            var sbyM=flightOrDuty.match(/^(SBY\d{1,2})/i);
+            if(!sbyM){
+                var gcM=flightOrDuty.match(/^(.+?)([A-Z]{3})$/);
+                if(gcM&&gcM[2]!==flightOrDuty&&/^[A-Z]/.test(gcM[1])&&/^(NTS|RTP|SEP|SIM|CSIM|TTT|EPT|CRM|UPRT|ADMN)/i.test(gcM[1])){
+                    embeddedCity=gcM[2];
+                }
+            }
+        }
+
+        // DEP_CITY DEP_TIME ARR_CITY ARR_TIME BLK TURN EQ
+        // If city was embedded in duty code, skip depCity token (it's already known)
+        var depCity,depTime,arrCity,arrTime,blkTime,turnTime,eqType;
+        if(embeddedCity&&tokens[idx]&&isTimeStr(tokens[idx])){
+            depCity=embeddedCity;
+            depTime=tokens[idx]||'';idx++;
+            arrCity=tokens[idx]||'';idx++;
+            arrTime=tokens[idx]||'';idx++;
+            blkTime=tokens[idx]||'';idx++;
+            turnTime=tokens[idx]||'';idx++;
+            eqType=tokens[idx]||'';idx++;
+        }else{
+            depCity=tokens[idx]||'';idx++;
+            depTime=tokens[idx]||'';idx++;
+            arrCity=tokens[idx]||'';idx++;
+            arrTime=tokens[idx]||'';idx++;
+            blkTime=tokens[idx]||'';idx++;
+            turnTime=tokens[idx]||'';idx++;
+            eqType=tokens[idx]||'';idx++;
+        }
+
+        var isTrainPairing=TRAIN_ACTY.test(currentActy);
+
+        if(isFlightNum(flightOrDuty)){
+            var sector=depCity+' '+arrCity;
+            var duty=(isDH||isTrainPairing)?'TVL':'FLY';
+            var pairingDuty=(isDH||isTrainPairing)?'':rank;
+            var prefix=isDH?'DH ':'VA ';
+            var fltNum=prefix+flightOrDuty;
+            var fltTime=(blkTime&&blkTime.match(/^\d{2}:\d{2}$/))?blkTime:'';
+            var ac=(eqType&&eqType.match(/^[A-Z0-9]{2,3}$/))?eqType:'';
+            if(!ac&&turnTime&&turnTime.match(/^[A-Z0-9]{2,3}$/))ac=turnTime;
+            csvRows.push(dateStr+','+dayName+','+fltNum+','+sector+','+ac+','+duty+','+pairingDuty+','+signIn+','+cleanT(depTime)+','+cleanT(arrTime)+',,'+fltTime+',,,,');
+        }else{
+            // Ground duty / standby
+            var gDuty=flightOrDuty,gLoc=depCity||base;
+            if(embeddedCity){
+                // Already parsed: duty code had city stripped
+                var gcMatch2=flightOrDuty.match(/^(.+?)([A-Z]{3})$/);
+                if(gcMatch2)gDuty=gcMatch2[1];
+                gLoc=embeddedCity;
+            }else{
+                var sbyMatch=flightOrDuty.match(/^(SBY\d{1,2})/i);
+                if(sbyMatch){gDuty=sbyMatch[1];}
+            }
+            var gStd=cleanT(depTime),gSta=cleanT(arrTime);
+            var gDutyTime=(blkTime&&blkTime.match(/^\d{2}:\d{2}$/))?blkTime:'';
+            var gSector=depCity||gLoc||base;
+            var gTraining=(/NTS|SEP|SIM|CSIM|RTP|TTT|EPT|CRM|UPRT|VSEP|VSIM|NTSSEP/i.test(gDuty))?gDuty:'';
+            csvRows.push(dateStr+','+dayName+',,'+gSector+',,'+gDuty+',,'+signIn+','+gStd+','+gSta+',,,'+gDutyTime+',,'+gTraining+',');
+        }
+    }
+
+    if(csvRows.length<=2)throw new Error('No roster data found in Sabre email');
+    return csvRows.join('\n');
+}
+function parseRosterReport(text){
+    // Auto-detect roster type from content
+    var isCompleted=/Actual\s*(Flight|Duty)\s*Times/i.test(text);
+    var label=isCompleted?'Complete':'Publish';
+
+    // Find column headers and strip header/footer
+    var headerRx=/Start DateDayFlight NumberSectorA\/CDutyPairing DutyRptSTDSTASign OffFlt TimeDuty TimeHotelTrainingRemarks/;
+    var hm=text.match(headerRx);
+    if(!hm)throw new Error('Could not find column headers in Roster Report. Make sure you copied the full page including the table header row.');
+    var dataText=text.substring(hm.index+hm[0].length);
+    dataText=dataText.replace(/Found \d+ items.*$/,'').replace(/\n/g,' ').trim();
+
+    // Split by date boundaries: DDMMMYYDDD (e.g. 16FEB26MON)
+    var dateRx=/(\d{2}[A-Z]{3}\d{2})(MON|TUE|WED|THU|FRI|SAT|SUN)/g;
+    var positions=[],dm;
+    while((dm=dateRx.exec(dataText))!==null){positions.push({date:dm[1],day:dm[2],pos:dm.index,endPos:dm.index+dm[0].length});}
+    if(positions.length===0)throw new Error('No roster dates found in pasted data.');
+    var dayBlocks=[];
+    for(var i=0;i<positions.length;i++){
+        var start=positions[i].endPos;
+        var end=(i+1<positions.length)?positions[i+1].pos:dataText.length;
+        dayBlocks.push({date:positions[i].date,day:positions[i].day,content:dataText.substring(start,end)});
+    }
+
+    var DAYOFF_CODES=['DDO','BLANK','PDO','RDO','ADO','ALV','ALVA','ALVC','ALVS','SICK','SICD','LSL','SOCT','SOCDD','TOIL'];
+    var csvRows=[label,'Start Date,Day,Flight Number,Sector,A/C,Duty,Pairing Duty,Rpt,STD,STA,Sign Off,Flt Time,Duty Time,Hotel,Training,Remarks'];
+
+    // Flight row regex: captures 4-digit groups individually to avoid digit bleeding
+    var flightRx=/^((?:VA|DH) \d{4})([A-Z]{3} [A-Z]{3})(\w{2,3})(FLY|TVL)(CPT|FO|DIS)?(\s*)(\d{4})(\d{4})(\d{4})?(\d{4})?(.*)/;
+
+    for(var d=0;d<dayBlocks.length;d++){
+        var date=dayBlocks[d].date,day=dayBlocks[d].day,content=dayBlocks[d].content;
+        // Split into row-level parts at flight or ground-duty-continuation boundaries
+        var parts=content.split(/(?=(?:VA|DH) \d{4})|(?=[A-Z]{3}-[A-Z])/);
+
+        for(var p=0;p<parts.length;p++){
+            var part=parts[p].trim();
+            if(!part)continue;
+
+            // --- FLIGHT ROW ---
+            var fm=part.match(flightRx);
+            if(fm){
+                var fltNum=fm[1],sector=fm[2],ac=fm[3],duty=fm[4];
+                var pDuty=fm[5]||'',gap=fm[6],g7=fm[7],g8=fm[8],g9=fm[9]||'',g10=fm[10]||'';
+                var rest=fm[11]||'';
+                // Determine if Rpt field is present based on space gap
+                // PairingDuty present + no gap = Rpt present; PairingDuty absent + 1 space gap = Rpt present
+                var hasRpt=pDuty?(gap.length===0):(gap.length<=1);
+                var rpt,std,sta,signOff;
+                if(hasRpt){rpt=g7;std=g8;sta=g9;signOff=g10;}
+                else{rpt='';std=g7;sta=g8;signOff=g9;}
+                // Parse HH:MM times from remainder
+                var fltTime='',dutyTime='';
+                var hmTimes=rest.match(/\d{1,2}:\d{2}/g)||[];
+                if(hmTimes.length>=2){fltTime=hmTimes[0];dutyTime=hmTimes[1];}
+                else if(hmTimes.length===1){
+                    // 2+ leading spaces = empty FltTime, value is DutyTime
+                    var spBefore=(rest.match(/^(\s*)/)||['',''])[1].length;
+                    if(spBefore>=2){dutyTime=hmTimes[0];}else{fltTime=hmTimes[0];}
+                }
+                if(fltTime&&fltTime.length===4)fltTime='0'+fltTime;
+                if(dutyTime&&dutyTime.length===4)dutyTime='0'+dutyTime;
+                var remarks='';var rmkM=rest.match(/#[^\d].*/);if(rmkM)remarks=rmkM[0].trim();
+                csvRows.push(date+','+day+','+fltNum+','+sector+','+ac+','+duty+','+pDuty+','+rpt+','+std+','+sta+','+signOff+','+fltTime+','+dutyTime+',,,'+remarks);
+                continue;
+            }
+
+            // --- GROUND DUTY CONTINUATION (BNE-NTS, SYD-SBY03 pattern) ---
+            var gc=part.match(/^([A-Z]{3})-(LO|[A-Z0-9]{2,})\s*(.*)/);
+            if(gc){
+                if(gc[2]==='LO')continue; // Skip layover rows
+                var gSector=gc[1],gDuty=gc[2],gRest=gc[3]||'';
+                var gDigits=gRest.match(/(\d{4})(\d{4})(\d{4})?(\d{4})?/);
+                var gRpt='',gStd='',gSta='',gSignOff='';
+                if(gDigits){
+                    var gSp=(gRest.match(/^(\s*)/)||['',''])[1].length;
+                    // 2+ spaces before digits = no Rpt
+                    if(gSp>=2||!gDigits[3]){gStd=gDigits[1];gSta=gDigits[2];gSignOff=gDigits[3]||'';}
+                    else{gRpt=gDigits[1];gStd=gDigits[2];gSta=gDigits[3]||'';gSignOff=gDigits[4]||'';}
+                }
+                var gTimes=gRest.match(/\d{1,2}:\d{2}/g)||[];
+                var gFltTime=gTimes[0]||'',gDutyTime=gTimes[1]||'';
+                if(gFltTime&&gFltTime.length===4)gFltTime='0'+gFltTime;
+                if(gDutyTime&&gDutyTime.length===4)gDutyTime='0'+gDutyTime;
+                var gTraining='';
+                var gTrng=gRest.match(/\b(NTS|NTSSEP|NTSADM|NTSADH|SEP|SIM|RTP\S*|TTT|EPT|CRM|UPRT)\s*$/i);
+                if(gTrng)gTraining=gTrng[1];
+                else if(/NTS|SEP|SIM|CSIM|RTP|TTT|EPT|CRM|UPRT/i.test(gDuty))gTraining=gDuty;
+                csvRows.push(date+','+day+',,'+gSector+',-,'+gDuty+',,'+gRpt+','+gStd+','+gSta+','+gSignOff+','+gFltTime+','+gDutyTime+',,'+gTraining+',');
+                continue;
+            }
+
+            // --- DAY-OFF or GROUND DUTY FIRST ROW (SYD DDO / SYD NTS ...) ---
+            var fr=part.match(/^([A-Z]{3})\s+([A-Z0-9]+)\s*(.*)/);
+            if(fr){
+                var fSector=fr[1],fDutyCode=fr[2],fRest=fr[3]||'';
+                var isDayOff=false;
+                for(var x=0;x<DAYOFF_CODES.length;x++){if(fDutyCode===DAYOFF_CODES[x]){isDayOff=true;break;}}
+                if(isDayOff){
+                    var doRemarks='';var doRmk=fRest.match(/#[^\d].*/);if(doRmk)doRemarks=doRmk[0].trim();
+                    csvRows.push(date+','+day+',,'+fSector+',,'+fDutyCode+',,,,,,,0,,,'+doRemarks);
+                    continue;
+                }
+                // Ground duty (NTS, NTSSEP, SBY03, etc.)
+                var fDigits=fRest.match(/(\d{4})(\d{4})(\d{4})?(\d{4})?/);
+                var fRpt='',fStd='',fSta='',fSignOff='';
+                if(fDigits){
+                    if(fDigits[3]){fRpt=fDigits[1];fStd=fDigits[2];fSta=fDigits[3]||'';fSignOff=fDigits[4]||'';}
+                    else{fStd=fDigits[1];fSta=fDigits[2];}
+                }
+                var fTimes=fRest.match(/\d{1,2}:\d{2}/g)||[];
+                var fDutyTime=fTimes[0]||'';
+                if(fDutyTime&&fDutyTime.length===4)fDutyTime='0'+fDutyTime;
+                var fTraining='';
+                var fTrng=fRest.match(/\b(NTS|NTSSEP|NTSADM|NTSADH|SEP|SIM|RTP\S*|TTT|EPT|CRM|UPRT)\s*$/i);
+                if(fTrng)fTraining=fTrng[1];
+                else if(/NTS|SEP|SIM|CSIM|RTP|TTT|EPT|CRM|UPRT/i.test(fDutyCode))fTraining=fDutyCode;
+                csvRows.push(date+','+day+',,'+fSector+',,'+fDutyCode+',,'+fRpt+','+fStd+','+fSta+','+fSignOff+',,'+fDutyTime+',,'+fTraining+',');
+                continue;
+            }
+        }
+    }
+    if(csvRows.length<=2)throw new Error('No roster data found in Roster Report');
+    return csvRows.join('\n');
+}
+
+function processPubPaste(){
+    var src=document.querySelector('input[name="pubSource"]:checked').value;
+    var raw=document.getElementById('pubPaste').value.trim();
+    var statusEl=document.getElementById('pubPasteStatus');
+    if(!raw){statusEl.textContent='No data pasted';statusEl.className='paste-status err';return;}
+    try{
+        var csvText=parsePastedRoster(raw,src);
+        pubData=parseCSV(csvText);
+        if(!pubData.length)throw new Error('No valid rows found');
+        statusEl.textContent=pubData.length+' rows loaded';statusEl.className='paste-status ok';
+        checkReady();
+    }catch(err){
+        statusEl.textContent='Error: '+err.message;statusEl.className='paste-status err';
+    }
+}
+function processCompPaste(){
+    var src=document.querySelector('input[name="compSource"]:checked').value;
+    var raw=document.getElementById('compPaste').value.trim();
+    var statusEl=document.getElementById('compPasteStatus');
+    if(!raw){statusEl.textContent='No data pasted';statusEl.className='paste-status err';return;}
+    try{
+        var csvText=parsePastedRoster(raw,src);
+        compData=parseCSV(csvText);
+        if(!compData.length)throw new Error('No valid rows found');
+        statusEl.textContent=compData.length+' rows loaded';statusEl.className='paste-status ok';
+        checkReady();
+    }catch(err){
+        statusEl.textContent='Error: '+err.message;statusEl.className='paste-status err';
+    }
+}
 function checkReady(){document.getElementById('calcBtn').disabled=!(sel.value!==''&&pubData);}
 function toggleDetail(id){document.getElementById(id).classList.toggle('show');}
 function showError(m){var e=document.getElementById('errorMsg');e.textContent=m;e.classList.add('show');}
