@@ -1092,6 +1092,9 @@ function parseRosterReportHTML(html){
 
     var csvRows=[rosterType,CSV_COLS.join(',')];
 
+    // Track last seen date/day for continuation rows
+    var lastDate='',lastDay='';
+
     // Process data rows
     for(var r=headerRowIdx+1;r<rows.length;r++){
         var cells=rows[r].querySelectorAll('td');
@@ -1113,12 +1116,16 @@ function parseRosterReportHTML(html){
         // [4]=A/C, [5]=Duty, [6]=Pairing Duty, [7]=Rpt, [8]=STD, [9]=STA
         // [10]=Sign Off, [11]=Flt Time, [12]=Duty Time, [13]=Hotel, [14]=Training, [15]=Remarks
 
-        // Skip empty rows (no date, no flight, no duty, no sector)
-        var hasDate=vals[0]&&/^\d{2}[A-Z]{3}\d{2}$/.test(vals[0]);
+        // Carry forward date/day for continuation rows
+        if(vals[0]&&/^\d{2}[A-Z]{3}\d{2}$/.test(vals[0])){lastDate=vals[0];lastDay=vals[1]||lastDay;}
+        else{vals[0]=lastDate;vals[1]=lastDay;}
+
+        // Skip rows with no useful data
+        if(!vals[0])continue;
         var hasFlight=vals[2]&&/^(VA|DH)\s*\d{3,4}$/.test(vals[2]);
         var hasDuty=vals[5]&&vals[5].length>0;
         var hasSector=vals[3]&&vals[3].length>0;
-        if(!hasDate&&!hasFlight&&!hasDuty&&!hasSector)continue;
+        if(!hasFlight&&!hasDuty&&!hasSector)continue;
 
         // Skip layover rows
         if(vals[5]==='LO')continue;
