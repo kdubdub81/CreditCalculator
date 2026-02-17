@@ -674,6 +674,7 @@ document.getElementById('pubLabel').addEventListener('click',function(){document
 document.getElementById('compLabel').addEventListener('click',function(){document.getElementById('compFile').click();});
 document.getElementById('pubFile').addEventListener('change',function(e){var f=e.target.files[0];if(f){var r=new FileReader();r.onload=function(ev){pubData=parseCSV(ev.target.result);document.getElementById('pubStatus').textContent=pubData.length+' rows';document.getElementById('pubLabel').classList.add('loaded');checkReady();};r.readAsText(f);}});
 document.getElementById('compFile').addEventListener('change',function(e){var f=e.target.files[0];if(f){var r=new FileReader();r.onload=function(ev){compData=parseCSV(ev.target.result);document.getElementById('compStatus').textContent=compData.length+' rows';document.getElementById('compLabel').classList.add('loaded');checkReady();};r.readAsText(f);}});
+setupPasteListeners();
 
 // -- Source toggle --
 function togglePubSource(){
@@ -682,6 +683,7 @@ function togglePubSource(){
     document.getElementById('pubPasteWrap').style.display=(src!=='csv')?'block':'none';
     document.getElementById('pubPaste').value='';
     document.getElementById('pubPasteStatus').textContent='';
+    pubPasteHtml='';
 }
 function toggleCompSource(){
     var src=document.querySelector('input[name="compSource"]:checked').value;
@@ -689,14 +691,32 @@ function toggleCompSource(){
     document.getElementById('compPasteWrap').style.display=(src!=='csv')?'block':'none';
     document.getElementById('compPaste').value='';
     document.getElementById('compPasteStatus').textContent='';
+    compPasteHtml='';
 }
 
 // -- Paste processing --
+// Store clipboard HTML for Roster Report parsing (much more reliable than plain text)
+var pubPasteHtml='',compPasteHtml='';
+function setupPasteListeners(){
+    var pubTA=document.getElementById('pubPaste');
+    var compTA=document.getElementById('compPaste');
+    if(pubTA)pubTA.addEventListener('paste',function(e){
+        var html=e.clipboardData&&e.clipboardData.getData('text/html');
+        pubPasteHtml=html||'';
+    });
+    if(compTA)compTA.addEventListener('paste',function(e){
+        var html=e.clipboardData&&e.clipboardData.getData('text/html');
+        compPasteHtml=html||'';
+    });
+}
 // Format parsers: each converts pasted text into standard CSV text
-// These are stubs that will be implemented when formats are defined
-function parsePastedRoster(text,source){
+function parsePastedRoster(text,source,html){
     if(source==='sabre') return parseSabreEmail(text);
-    if(source==='rosterreport') return parseRosterReport(text);
+    if(source==='rosterreport'){
+        // Prefer HTML clipboard (has proper table cells) over plain text
+        if(html)try{return parseRosterReportHTML(html);}catch(e){}
+        return parseRosterReport(text);
+    }
     return text; // CSV passthrough
 }
 function parseSabreEmail(text){
@@ -1035,13 +1055,91 @@ function parseRosterReport(text){
     return csvRows.join('\n');
 }
 
+function parseRosterReportHTML(html){
+    // Parse clipboard HTML which preserves table cell boundaries
+    var parser=new DOMParser();
+    var doc=parser.parseFromString(html,'text/html');
+    var tables=doc.querySelectorAll('table');
+
+    // Find the roster data table (contains "Start Date" header)
+    var dataTable=null;
+    for(var t=0;t<tables.length;t++){
+        if(tables[t].textContent.indexOf('Start Date')>=0){dataTable=tables[t];break;}
+    }
+    if(!dataTable)throw new Error('No roster table found in clipboard HTML.');
+
+    var rows=dataTable.querySelectorAll('tr');
+
+    // Map column headers to indices
+    var CSV_COLS=['Start Date','Day','Flight Number','Sector','A/C','Duty','Pairing Duty','Rpt','STD','STA','Sign Off','Flt Time','Duty Time','Hotel','Training','Remarks'];
+    var colMap={},headerRowIdx=-1;
+    for(var r=0;r<rows.length;r++){
+        var cells=rows[r].querySelectorAll('th,td');
+        var found=0;
+        for(var c=0;c<cells.length;c++){
+            var txt=cells[c].textContent.trim();
+            for(var h=0;h<CSV_COLS.length;h++){
+                if(txt===CSV_COLS[h]){colMap[CSV_COLS[h]]=c;found++;break;}
+            }
+        }
+        if(found>=8){headerRowIdx=r;break;}
+    }
+    if(headerRowIdx<0)throw new Error('Could not find column headers in clipboard HTML.');
+
+    // Detect roster type
+    var isCompleted=/Actual\s*(Flight|Duty)\s*Times/i.test(html);
+    var rosterType=isCompleted?'Completed':'Publish';
+
+    var csvRows=[rosterType,CSV_COLS.join(',')];
+
+    // Process data rows
+    for(var r=headerRowIdx+1;r<rows.length;r++){
+        var cells=rows[r].querySelectorAll('td');
+        if(cells.length<5)continue;
+
+        var vals=[];
+        for(var c=0;c<CSV_COLS.length;c++){
+            var ci=colMap[CSV_COLS[c]];
+            var v='';
+            if(ci!==undefined&&ci<cells.length){
+                v=cells[ci].textContent.trim();
+            }
+            // Clean amendment markers
+            v=v.replace(/\$/g,'').trim();
+            vals.push(v);
+        }
+
+        // vals[0]=Start Date, [1]=Day, [2]=Flight Number, [3]=Sector
+        // [4]=A/C, [5]=Duty, [6]=Pairing Duty, [7]=Rpt, [8]=STD, [9]=STA
+        // [10]=Sign Off, [11]=Flt Time, [12]=Duty Time, [13]=Hotel, [14]=Training, [15]=Remarks
+
+        // Skip empty rows (no date, no flight, no duty, no sector)
+        var hasDate=vals[0]&&/^\d{2}[A-Z]{3}\d{2}$/.test(vals[0]);
+        var hasFlight=vals[2]&&/^(VA|DH)\s*\d{3,4}$/.test(vals[2]);
+        var hasDuty=vals[5]&&vals[5].length>0;
+        var hasSector=vals[3]&&vals[3].length>0;
+        if(!hasDate&&!hasFlight&&!hasDuty&&!hasSector)continue;
+
+        // Skip layover rows
+        if(vals[5]==='LO')continue;
+
+        // Escape any commas in Remarks field
+        if(vals[15]&&vals[15].indexOf(',')>=0)vals[15]='"'+vals[15]+'"';
+
+        csvRows.push(vals.join(','));
+    }
+
+    if(csvRows.length<=2)throw new Error('No roster data found in clipboard HTML.');
+    return csvRows.join('\n');
+}
+
 function processPubPaste(){
     var src=document.querySelector('input[name="pubSource"]:checked').value;
     var raw=document.getElementById('pubPaste').value.trim();
     var statusEl=document.getElementById('pubPasteStatus');
     if(!raw){statusEl.textContent='No data pasted';statusEl.className='paste-status err';return;}
     try{
-        var csvText=parsePastedRoster(raw,src);
+        var csvText=parsePastedRoster(raw,src,pubPasteHtml);
         pubData=parseCSV(csvText);
         if(!pubData.length)throw new Error('No valid rows found');
         statusEl.textContent=pubData.length+' rows loaded';statusEl.className='paste-status ok';
@@ -1056,7 +1154,7 @@ function processCompPaste(){
     var statusEl=document.getElementById('compPasteStatus');
     if(!raw){statusEl.textContent='No data pasted';statusEl.className='paste-status err';return;}
     try{
-        var csvText=parsePastedRoster(raw,src);
+        var csvText=parsePastedRoster(raw,src,compPasteHtml);
         compData=parseCSV(csvText);
         if(!compData.length)throw new Error('No valid rows found');
         statusEl.textContent=compData.length+' rows loaded';statusEl.className='paste-status ok';
