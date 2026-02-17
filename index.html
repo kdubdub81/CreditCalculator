@@ -152,27 +152,6 @@ input[type="file"]{display:none}
 <div class="tab-content" id="tab-settings">
 
 <div class="card">
-<div class="card-title">GitHub Connection</div>
-<div id="ghStatus" class="gh-status disconnected"><span class="dot"></span><span>Not connected</span></div>
-<div class="settings-row">
-<div class="field" style="flex:2"><label>Personal Access Token (fine-grained)</label><input type="password" class="settings-input mono" id="ghToken" placeholder="github_pat_..."></div>
-</div>
-<div class="settings-row">
-<div class="field"><label>Owner / Org</label><input type="text" class="settings-input mono" id="ghOwner" placeholder="username"></div>
-<div class="field"><label>Repository</label><input type="text" class="settings-input mono" id="ghRepo" placeholder="roster-calc"></div>
-</div>
-<div class="settings-row">
-<div class="field"><label>Branch</label><input type="text" class="settings-input mono" id="ghBranch" placeholder="main" value="main"></div>
-<div class="field"><label>Config Path</label><input type="text" class="settings-input mono" id="ghPath" placeholder="config.json" value="config.json"></div>
-</div>
-<div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
-<button class="btn-sm primary" onclick="ghConnect()">&#128279; Connect &amp; Load</button>
-<button class="btn-sm" onclick="ghSaveCredentials()">&#128190; Remember in Browser</button>
-<button class="btn-sm danger" onclick="ghClearCredentials()">&#128465; Clear Saved</button>
-</div>
-</div>
-
-<div class="card">
 <div class="card-title">Credit Values</div>
 <div class="settings-row">
 <div class="field"><label>Vlearn Credit</label><input type="number" step="0.01" class="settings-input mono" id="cfg_VLEARN_CREDIT"></div>
@@ -243,6 +222,27 @@ input[type="file"]{display:none}
 <button class="btn-sm" onclick="exportConfigJSON()">&#128203; Export JSON</button>
 <button class="btn-sm" onclick="importConfigJSON()">&#128194; Import JSON</button>
 <input type="file" id="importJSONFile" accept=".json" style="display:none">
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">GitHub Connection <span style="font-weight:400;text-transform:none;font-size:.75rem;color:var(--text2)">(Admin Use Only)</span></div>
+<div id="ghStatus" class="gh-status disconnected"><span class="dot"></span><span>Not connected</span></div>
+<div class="settings-row">
+<div class="field" style="flex:2"><label>Personal Access Token (fine-grained)</label><input type="password" class="settings-input mono" id="ghToken" placeholder="github_pat_..."></div>
+</div>
+<div class="settings-row">
+<div class="field"><label>Owner / Org</label><input type="text" class="settings-input mono" id="ghOwner" placeholder="username"></div>
+<div class="field"><label>Repository</label><input type="text" class="settings-input mono" id="ghRepo" placeholder="roster-calc"></div>
+</div>
+<div class="settings-row">
+<div class="field"><label>Branch</label><input type="text" class="settings-input mono" id="ghBranch" placeholder="main" value="main"></div>
+<div class="field"><label>Config Path</label><input type="text" class="settings-input mono" id="ghPath" placeholder="config.json" value="config.json"></div>
+</div>
+<div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
+<button class="btn-sm primary" onclick="ghConnect()">&#128279; Connect &amp; Load</button>
+<button class="btn-sm" onclick="ghSaveCredentials()">&#128190; Remember in Browser</button>
+<button class="btn-sm danger" onclick="ghClearCredentials()">&#128465; Clear Saved</button>
 </div>
 </div>
 </div>
